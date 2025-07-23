@@ -1,22 +1,67 @@
-h1{
-color: rgb(58, 90, 165);}
-
-/* static/css/style.css */
 body {
     background-color: #f8f9fa; /* Color de fondo claro */
+    display: flex; /* Para centrar el contenido de la tarjeta */
+    justify-content: center; /* Centrado horizontal */
+    align-items: center; /* Centrado vertical */
+    min-height: 100vh; /* Ocupa toda la altura de la ventana */
+    margin: 0;
+    padding: 20px; /* Pequeño padding para evitar que el contenido toque los bordes */
+    box-sizing: border-box; /* Incluye padding y borde en el tamaño total */
 }
 
+/* Estilos para el contenedor principal */
 .container {
     max-width: 900px; /* Ancho máximo para el contenido */
 }
 
+/* Estilos para las tarjetas (card) */
 .card {
     border-radius: 15px; /* Bordes redondeados para las tarjetas */
     border: none; /* Sin borde por defecto */
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); /* Sombra más pronunciada */
 }
 
+/* Estilos para los títulos dentro de las tarjetas */
 .card-title {
-    color: #007bff; /* Color primario para títulos */
+    color: #007bff; /* Color primario para títulos (Bootstrap blue) */
+}
+
+/* Estilos específicos para el título principal en success.html */
+h1 {
+    color: rgb(58, 90, 165); /* Color azul específico para h1 */
+}
+
+
+/* Estilos para el spinner de carga */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+    margin-top: 1.5rem;
+    color: #0d6efd; /* Color primario de Bootstrap */
+    /* Asegura que el spinner sea visible y tenga un tamaño mínimo */
+    display: inline-block;
+    vertical-align: -0.125em;
+    border: 0.25em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: .75s linear infinite spinner-border;
+}
+@keyframes spinner-border {
+    to { transform: rotate(360deg); }
+}
+
+/* Estilo para el mensaje de redirección automática */
+.redirect-message {
+    font-size: 1.3em; /* Ajusta este valor para hacerlo más grande o más pequeño */
+    font-weight: bold; /* Opcional: para que resalte más */
+    color: #28a745; /* Opcional: un color que lo haga destacar, como el verde de éxito */
+}
+
+/* Estilo para el botón de redirección manual */
+.btn-redirect {
+    margin-top: 20px; /* Espacio superior para el botón */
+    padding: 12px 30px; /* Relleno del botón */
+    font-size: 1.1em; /* Tamaño de fuente del botón */
 }
 
 /* Estilo para el iframe incrustado de Google Forms */

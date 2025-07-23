@@ -32,14 +32,13 @@
         const googleFormsUrl = "{{ google_forms_url | safe }}";
 
         // Establecer el href del enlace de respaldo inmediatamente
-        document.getElementById('redirectLink').href = googleFormsUrl;
-
+        document.getElementById('redirectButton').onclick = function() {
+            window.location.href = googleFormsUrl;
+        };
         // Redirigir automáticamente después de un breve retraso
         setTimeout(function() {
             window.location.href = googleFormsUrl;
         }, 3000); // Redirige después de 3 segundos (ajusta si es necesario)
     </script>
-    <!-- Ya no necesitamos cargar static/js/redirect.js si la lógica está aquí -->
-    <!-- <script src="{{ url_for('static', filename='js/redirect.js') }}"></script> -->
 </body>
 </html>

@@ -26,7 +26,7 @@
     <script src="{{ url_for('static', filename='js/redirect.js') }}"></script>
     <script>
         // Establecer el href del enlace de respaldo
-        document.getElementById('redirectLink').href = "{{ google_forms_url }}";
+        document.getElementById('redirectLink').href = "{{ google_forms_url | safe }}";
     </script>
 </body>
 </html>

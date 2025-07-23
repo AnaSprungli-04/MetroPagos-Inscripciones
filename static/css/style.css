@@ -1,0 +1,51 @@
+h1{
+color: rgb(58, 90, 165);}
+
+/* static/css/style.css */
+body {
+    background-color: #f8f9fa; /* Color de fondo claro */
+}
+
+.container {
+    max-width: 900px; /* Ancho máximo para el contenido */
+}
+
+.card {
+    border-radius: 15px; /* Bordes redondeados para las tarjetas */
+    border: none; /* Sin borde por defecto */
+}
+
+.card-title {
+    color: #007bff; /* Color primario para títulos */
+}
+
+/* Estilo para el iframe incrustado de Google Forms */
+.embed-responsive {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+}
+
+.embed-responsive-16by9::before {
+    content: "";
+    display: block;
+    padding-top: 56.25%; /* Relación de aspecto 16:9 */
+}
+
+.embed-responsive .embed-responsive-item {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0; /* Sin borde para el iframe */
+}
+
+/* Opcional: Centrar el botón de pagar */
+.form-center {
+    display: flex;
+    justify-content: center;
+}

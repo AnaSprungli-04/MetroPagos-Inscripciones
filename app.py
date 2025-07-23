@@ -38,7 +38,7 @@ GOOGLE_FORMS_ENTRENADORES_ID = "1FAIpQLSd1sYDAiCHkwzRxzJy2nRRQptRDumRrke7iMFOLSZ
 #
 # Para producción:
 # 1. Reemplaza con tu dominio HTTPS real (ej. "https://tudominio.com").
-URL_BASE = "http://127.0.0.1:5000" # Para pruebas locales SIN auto_return, o si usas ngrok y lo actualizas.
+URL_BASE = "https://metropolitanopagos-inscripciones.onrender.com" # Para pruebas locales SIN auto_return, o si usas ngrok y lo actualizas.
 
 # --- LÓGICA DE PRECIOS ---
 BASE_PRECIOS = {

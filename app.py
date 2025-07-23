@@ -1,7 +1,9 @@
+# app.py
+
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import mercadopago
 import os
-import logging # Importar el módulo de logging
+import logging
 
 app = Flask(__name__)
 
@@ -9,14 +11,14 @@ app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 
 # --- CONFIGURACIÓN DE MERCADO PAGO ---
-# ¡IMPORTANTE! Reemplaza con tu Access Token REAL DE PRUEBA o de PRODUCCIÓN
-# Mantenlo seguro, no lo expongas en el frontend
-MERCADO_PAGO_ACCESS_TOKEN = "TEST-7537326222958564-081218-6f78e1f990e1b269a602202189d4f203-1123457005"
+# ¡IMPORTANTE! En producción, carga esto desde una variable de entorno por seguridad.
+# NO lo dejes harcodeado en el código fuente de tu repositorio público.
+MERCADO_PAGO_ACCESS_TOKEN = os.environ.get("MERCADO_PAGO_ACCESS_TOKEN", "TEST-7537326222958564-081218-6f78e1f990e1b269a602202189d4f203-1123457005")
 sdk = mercadopago.SDK(MERCADO_PAGO_ACCESS_TOKEN)
 
 # --- ID DEL GOOGLE FORMS PARA COMPETIDORES Y SU CAMPO DE NÚMERO DE OPERACIÓN ---
 # ¡Reemplaza con el ID real de tu Google Forms para COMPETIDORES!
-GOOGLE_FORMS_COMPETIDORES_ID = "1FAIpQLSeA0tbwyKZ-u8zra-W6hlJL8TCTQOayqCpKwya3sON0nA" # EJEMPLO: REEMPLAZA
+GOOGLE_FORMS_COMPETIDORES_ID = "1FAIpQLSeA0tbwyKZ-u8zra-W6hlJL8TCTQOayqCpKwya3sON0ubS0nA" # EJEMPLO: REEMPLAZA
 # Este ID es para el campo "Número de Operación" en el form de COMPETIDORES
 GOOGLE_FORMS_ENTRY_ID_NUM_OPERACION = "entry.1161481877"
 
@@ -24,21 +26,11 @@ GOOGLE_FORMS_ENTRY_ID_NUM_OPERACION = "entry.1161481877"
 # ¡Reemplaza con el ID real de tu NUEVO Google Forms para ENTRENADORES!
 GOOGLE_FORMS_ENTRENADORES_ID = "1FAIpQLSd1sYDAiCHkwzRxzJy2nRRQptRDumRrke7iMFOLSZjpPsjCaQ" # <-- ¡REEMPLAZA ESTO!
 
-# --- URL BASE PARA PRUEBAS LOCALES (CAMBIAR PARA PRODUCCIÓN) ---
-# ¡IMPORTANTE! Para que 'auto_return' funcione correctamente, Mercado Pago
-# REQUIERE que las back_urls sean accesibles y, en la mayoría de los casos, HTTPS.
-# El error "auto_return invalid. back_url.success must be defined" a menudo significa
-# que la URL local (http://127.0.0.1) no es considerada válida por Mercado Pago
-# cuando 'auto_return' está activo.
-#
-# Para pruebas locales con 'auto_return':
-# 1. Usa `ngrok` (https://ngrok.com/) para exponer tu localhost con HTTPS.
-#    Ejecuta: `ngrok http 5000` y copia la URL HTTPS que te dé (ej. "https://<tu_subdominio>.ngrok-free.app").
-# 2. REEMPLAZA el valor de URL_BASE con esa URL de ngrok.
-#
-# Para producción:
-# 1. Reemplaza con tu dominio HTTPS real (ej. "https://tudominio.com").
-URL_BASE = "https://metropolitanopagos-inscripciones.onrender.com" # Para pruebas locales SIN auto_return, o si usas ngrok y lo actualizas.
+# --- URL BASE PARA PRODUCCIÓN ---
+# ¡IMPORTANTE! Cuando tu aplicación esté desplegada en Render, Render te dará una URL.
+# REEMPLAZA "https://tu-app-en-render.onrender.com" con la URL HTTPS REAL de tu aplicación desplegada.
+# Por ejemplo: "https://mi-evento-inscripciones.onrender.com"
+URL_BASE = "https://metropolitanopagos-inscripciones.onrender.com" 
 
 # --- LÓGICA DE PRECIOS ---
 BASE_PRECIOS = {
@@ -78,12 +70,9 @@ def process_inscription():
 
     if rol == 'entrenador':
         # Los entrenadores van directo a su formulario específico
-        # Aquí NO necesitamos un 'payment_id' porque no hay pago asociado directamente desde Mercado Pago
         google_forms_url = (
             f"https://docs.google.com/forms/d/e/{GOOGLE_FORMS_ENTRENADORES_ID}/viewform?"
-            f"usp=pp_url" # Solo la URL base del form de entrenadores
-            # Si el form de entrenadores tuviera algún campo para un "ID de transacción" ficticio, lo agregarías aquí
-            # f"&entry.XYZABCDE=ENTRENADOR_NO_PAGA"
+            f"usp=pp_url"
         )
         app.logger.info(f"Entrenador detectado. Redirigiendo a su formulario específico: {google_forms_url}")
         return redirect(google_forms_url)
@@ -114,21 +103,15 @@ def process_inscription():
                     "title": item_title,
                     "quantity": 1,
                     "unit_price": float(total_price),
-                    "currency_id": "ARS" # Es buena práctica especificar la moneda aquí también
+                    "currency_id": "ARS" 
                 }
             ],
-            # Las URLs de retorno de Mercado Pago a tu aplicación
             "back_urls": {
-                "success": f"{URL_BASE}/payment_success", # Redirige a tu ruta /payment_success
+                "success": f"{URL_BASE}/payment_success", 
                 "pending": f"{URL_BASE}/payment_pending",
                 "failure": f"{URL_BASE}/payment_failure"
             },
-            # Este parámetro es crucial para la redirección automática.
-            # Si estás en localhost y tienes problemas (como el error 400),
-            # es muy probable que debas usar ngrok (o similar) para exponer
-            # tu URL_BASE con HTTPS.
-            "auto_return": "approved", # Redirige automáticamente solo si el pago es aprobado
-            # Referencia externa para identificar la transacción en tu sistema
+            "auto_return": "approved", 
             "external_reference": f"inscripcion_comp_{clase_barco or 'no_barco'}_{os.urandom(8).hex()}"
         }
 
@@ -136,7 +119,7 @@ def process_inscription():
             preference_response = sdk.preference().create(preference_data)
             preference = preference_response["response"]
             
-            if preference_response["status"] == 201: # 201 Created es el código de éxito
+            if preference_response["status"] == 201: 
                 init_point = preference["init_point"]
                 app.logger.info(f"Preferencia creada exitosamente. Redirigiendo a: {init_point}")
                 return redirect(init_point)
@@ -157,9 +140,9 @@ def payment_success():
     Aquí se captura el 'payment_id' y se usa para construir la URL del Google Forms.
     Luego, el template 'success.html' usará JavaScript para la redirección final.
     """
-    payment_id = request.args.get('payment_id') # Captura el payment_id de la URL de Mercado Pago
-    status = request.args.get('status') # Captura el status (ej. "approved")
-    collection_id = request.args.get('collection_id') # Otro ID importante
+    payment_id = request.args.get('payment_id') 
+    status = request.args.get('status') 
+    collection_id = request.args.get('collection_id') 
     
     app.logger.info(f"Redirección de éxito de MP recibida. Payment ID: {payment_id}, Status: {status}, Collection ID: {collection_id}")
 
@@ -196,19 +179,18 @@ def mercadopago_webhook():
     Endpoint para recibir notificaciones de Webhook de Mercado Pago.
     ¡ESTO ES CRÍTICO PARA LA FIABILIDAD!
     """
-    data = request.json # Los webhooks de MP envían JSON
+    data = request.json 
     
     # Es crucial validar que la solicitud proviene de Mercado Pago.
     # Puedes verificar la firma o la IP de origen si necesitas mayor seguridad.
     
-    topic = data.get('topic') # Tipo de evento (ej. 'payment', 'merchant_order')
-    resource_id = data.get('id') # ID del recurso asociado al evento (ej. ID de pago)
+    topic = data.get('topic') 
+    resource_id = data.get('id') 
 
     app.logger.info(f"Webhook recibido. Topic: {topic}, Resource ID: {resource_id}")
 
     if topic == 'payment':
         try:
-            # Obtener los detalles completos del pago usando el SDK
             payment_info = sdk.payment().get(resource_id)
             
             if payment_info and payment_info["status"] == 200:
@@ -246,3 +228,4 @@ def mercadopago_webhook():
 if __name__ == '__main__':
     # Para producción, desactiva debug=True y usa un servidor WSGI como Gunicorn
     app.run(debug=True, port=5000)
+

@@ -32,9 +32,14 @@
         const googleFormsUrl = "{{ google_forms_url | safe }}";
 
         // Establecer el href del enlace de respaldo inmediatamente
-        document.getElementById('redirectButton').onclick = function() {
-            window.location.href = googleFormsUrl;
-        };
+       const redirectButton = document.getElementById('redirectButton');
+        if (redirectButton) { // Asegurarse de que el botón existe antes de asignarle el evento
+            redirectButton.onclick = function() {
+                window.location.href = googleFormsUrl;
+            };
+        } else {
+            console.error("Error: No se encontró el botón de redirección con ID 'redirectButton'.");
+        }
         // Redirigir automáticamente después de un breve retraso
         setTimeout(function() {
             window.location.href = googleFormsUrl;

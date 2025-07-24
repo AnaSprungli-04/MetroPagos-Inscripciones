@@ -106,7 +106,7 @@ def process_inscription():
         app.logger.info(f"Calculando precio para competidor: Rol={rol}, >150km={mas_150km}, Barco={clase_barco} -> Precio Final={total_price}")
 
         # Codificar la clase_barco para URL
-        encoded_clase_barco = urllib.parse.quote_plus(clase_barco)
+        # encoded_clase_barco = urllib.parse.quote_plus(clase_barco)
 
         preference_data = {
             "items": [

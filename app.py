@@ -4,6 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 import mercadopago
 import os
 import logging
+import urllib.parse # Importar para codificar URLs
 
 app = Flask(__name__)
 
@@ -21,6 +22,8 @@ sdk = mercadopago.SDK(MERCADO_PAGO_ACCESS_TOKEN)
 GOOGLE_FORMS_COMPETIDORES_ID = "1FAIpQLSeA0tbwyKZ-u8zra-W6hlJL8TCTQOayqCpKwya3sON0ubS0nA" # EJEMPLO: REEMPLAZA
 # Este ID es para el campo "Número de Operación" en el form de COMPETIDORES
 GOOGLE_FORMS_ENTRY_ID_NUM_OPERACION = "entry.1161481877"
+# Este ID es para el campo "Clase de Barco" en el form de COMPETIDORES (según tu ejemplo)
+GOOGLE_FORMS_ENTRY_ID_CLASE_BARCO = "entry.1553765108" # <-- ¡NUEVA CONSTANTE!
 
 # --- ID DEL GOOGLE FORMS PARA ENTRENADORES ---
 # ¡Reemplaza con el ID real de tu NUEVO Google Forms para ENTRENADORES!
@@ -30,7 +33,7 @@ GOOGLE_FORMS_ENTRENADORES_ID = "1FAIpQLSd1sYDAiCHkwzRxzJy2nRRQptRDumRrke7iMFOLSZ
 # ¡IMPORTANTE! Cuando tu aplicación esté desplegada en Render, Render te dará una URL.
 # REEMPLAZA "https://tu-app-en-render.onrender.com" con la URL HTTPS REAL de tu aplicación desplegada.
 # Por ejemplo: "https://mi-evento-inscripciones.onrender.com"
-URL_BASE = "https://metropolitanopagos-inscripciones.onrender.com" 
+URL_BASE = "https://tu-app-en-render.onrender.com" 
 
 # --- LÓGICA DE PRECIOS ---
 BASE_PRECIOS = {
@@ -66,7 +69,7 @@ def process_inscription():
     """
     rol = request.form.get('rol')
     mas_150km = request.form.get('mas_150km') == 'on'
-    clase_barco = request.form.get('clase_barco')
+    clase_barco = request.form.get('clase_barco') # Capturamos la clase_barco
 
     if rol == 'entrenador':
         # Los entrenadores van directo a su formulario específico
@@ -97,6 +100,9 @@ def process_inscription():
 
         app.logger.info(f"Calculando precio para competidor: Rol={rol}, >150km={mas_150km}, Barco={clase_barco} -> Precio Final={total_price}")
 
+        # Codificar la clase_barco para URL
+        encoded_clase_barco = urllib.parse.quote_plus(clase_barco)
+
         preference_data = {
             "items": [
                 {
@@ -107,9 +113,10 @@ def process_inscription():
                 }
             ],
             "back_urls": {
-                "success": f"{URL_BASE}/payment_success", 
-                "pending": f"{URL_BASE}/payment_pending",
-                "failure": f"{URL_BASE}/payment_failure"
+                # Añadir clase_barco como parámetro a las URLs de retorno
+                "success": f"{URL_BASE}/payment_success?clase_barco={encoded_clase_barco}", 
+                "pending": f"{URL_BASE}/payment_pending?clase_barco={encoded_clase_barco}",
+                "failure": f"{URL_BASE}/payment_failure?clase_barco={encoded_clase_barco}"
             },
             "auto_return": "approved", 
             "external_reference": f"inscripcion_comp_{clase_barco or 'no_barco'}_{os.urandom(8).hex()}"
@@ -137,14 +144,15 @@ def process_inscription():
 def payment_success():
     """
     Esta es la página a la que Mercado Pago redirige tras un pago exitoso.
-    Aquí se captura el 'payment_id' y se usa para construir la URL del Google Forms.
+    Aquí se captura el 'payment_id' y la 'clase_barco' y se usan para construir la URL del Google Forms.
     Luego, el template 'success.html' usará JavaScript para la redirección final.
     """
     payment_id = request.args.get('payment_id') 
     status = request.args.get('status') 
     collection_id = request.args.get('collection_id') 
+    clase_barco = request.args.get('clase_barco') # <-- ¡Recuperamos la clase_barco!
     
-    app.logger.info(f"Redirección de éxito de MP recibida. Payment ID: {payment_id}, Status: {status}, Collection ID: {collection_id}")
+    app.logger.info(f"Redirección de éxito de MP recibida. Payment ID: {payment_id}, Status: {status}, Collection ID: {collection_id}, Clase Barco: {clase_barco}")
 
     # Construye la URL del Google Forms para competidores, inyectando el payment_id
     google_forms_url_competidor = (
@@ -152,6 +160,12 @@ def payment_success():
         f"usp=pp_url&{GOOGLE_FORMS_ENTRY_ID_NUM_OPERACION}={payment_id}"
     )
     
+    # Si tenemos la clase de barco, la añadimos a la URL del Google Forms
+    if clase_barco:
+        # Codificar la clase_barco para URL antes de añadirla al Google Forms
+        encoded_clase_barco_for_form = urllib.parse.quote_plus(clase_barco)
+        google_forms_url_competidor += f"&{GOOGLE_FORMS_ENTRY_ID_CLASE_BARCO}={encoded_clase_barco_for_form}"
+
     return render_template('success.html', 
                            message="¡Tu pago fue procesado con éxito! Por favor, verifica tu correo o continúa con los pasos adicionales.", 
                            payment_id=payment_id, 
@@ -162,7 +176,8 @@ def payment_pending():
     """Maneja la redirección para pagos pendientes."""
     payment_id = request.args.get('payment_id')
     status = request.args.get('status')
-    app.logger.info(f"Redirección de pendiente de MP recibida. Payment ID: {payment_id}, Status: {status}")
+    clase_barco = request.args.get('clase_barco') # Recuperamos la clase_barco
+    app.logger.info(f"Redirección de pendiente de MP recibida. Payment ID: {payment_id}, Status: {status}, Clase Barco: {clase_barco}")
     return render_template('payment_status.html', status="pendiente", message="Tu pago está pendiente de aprobación. Por favor, revisa el estado de tu pago en Mercado Pago.")
 
 @app.route('/payment_failure')
@@ -170,7 +185,8 @@ def payment_failure():
     """Maneja la redirección para pagos fallidos."""
     payment_id = request.args.get('payment_id')
     status = request.args.get('status')
-    app.logger.info(f"Redirección de fallo de MP recibida. Payment ID: {payment_id}, Status: {status}")
+    clase_barco = request.args.get('clase_barco') # Recuperamos la clase_barco
+    app.logger.info(f"Redirección de fallo de MP recibida. Payment ID: {payment_id}, Status: {status}, Clase Barco: {clase_barco}")
     return render_template('payment_status.html', status="fallido", message="Tu pago no pudo ser procesado. Por favor, verifica tus datos o intenta con otro método de pago.")
 
 @app.route('/mercadopago-webhook', methods=['POST'])

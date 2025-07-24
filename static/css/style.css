@@ -34,7 +34,7 @@ header {
 
 /* Estilos específicos para el título principal en success.html */
 h1 {
-    color: 0065bd; /* Color azul específico para h1 */
+    color: #0065bd; /* Color azul específico para h1 */
 }
 
 /* Estilos para el spinner de carga */

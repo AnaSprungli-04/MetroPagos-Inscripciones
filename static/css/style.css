@@ -1,17 +1,16 @@
 body {
-    background-color: #f8f9fa; /* Color de fondo claro */
-    display: flex; /* Para centrar el contenido de la tarjeta */
-    justify-content: center; /* Centrado horizontal */
-    align-items: center; /* Centrado vertical */
-    min-height: 100vh; /* Ocupa toda la altura de la ventana */
+    background-color: #f8f9fa; 
+    min-height: 100vh;
     margin: 0;
-    padding: 20px; /* Pequeño padding para evitar que el contenido toque los bordes */
-    box-sizing: border-box; /* Incluye padding y borde en el tamaño total */
+    padding: 20px;
+    box-sizing: border-box; 
 }
 
 /* Estilos para el contenedor principal */
 .container {
-    max-width: 900px; /* Ancho máximo para el contenido */
+    max-width: 900px; 
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Estilos para las tarjetas (card) */
@@ -27,17 +26,17 @@ body {
 }
 
 header {
-  min-height: 30vh;
-  display: flex;
-  align-items: center;
-  position: relative;
+    min-height: 30vh;
+    display: flex; /* Esto está bien para el contenido dentro del header */
+    align-items: center;
+    position: relative;
+    margin-bottom: 20px;
 }
 
 /* Estilos específicos para el título principal en success.html */
 h1 {
     color: rgb(58, 90, 165); /* Color azul específico para h1 */
 }
-
 
 /* Estilos para el spinner de carga */
 .spinner-border {
@@ -52,6 +51,7 @@ h1 {
     border-right-color: transparent;
     border-radius: 50%;
     animation: .75s linear infinite spinner-border;
+
 }
 @keyframes spinner-border {
     to { transform: rotate(360deg); }

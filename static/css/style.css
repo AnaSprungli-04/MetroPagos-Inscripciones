@@ -9,7 +9,7 @@ body {
 
 /* Estilos para el contenedor principal */
 .container {
-    max-width: 50vw; 
+    max-width: 90vw; 
     margin-left: auto;
     margin-right: auto;
 }

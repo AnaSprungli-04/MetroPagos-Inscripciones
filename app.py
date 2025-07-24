@@ -33,7 +33,7 @@ GOOGLE_FORMS_ENTRENADORES_ID = "1FAIpQLSd1sYDAiCHkwzRxzJy2nRRQptRDumRrke7iMFOLSZ
 # ¡IMPORTANTE! Cuando tu aplicación esté desplegada en Render, Render te dará una URL.
 # REEMPLAZA "https://tu-app-en-render.onrender.com" con la URL HTTPS REAL de tu aplicación desplegada.
 # Por ejemplo: "https://mi-evento-inscripciones.onrender.com"
-URL_BASE = "https://tu-app-en-render.onrender.com" 
+URL_BASE = "https://metropolitanopagos-inscripciones.onrender.com" 
 
 # --- LÓGICA DE PRECIOS ---
 BASE_PRECIOS = {

@@ -35,7 +35,7 @@ URL_BASE = "https://metropolitanopagos-inscripciones.onrender.com"
 # --- LÓGICA DE PRECIOS ---
 BASE_PRECIOS = {
     'entrenador': 0,
-    'competidor': 20
+    'competidor': 0
 }
 
 PRECIOS_BARCOS = {
@@ -101,7 +101,7 @@ def process_inscription():
         # --- LÓGICA PARA EL BENEFICIO FIJO ---
         if mas_150km:
             if clase_barco in PRECIOS_BENEFICIO:
-                total_price -= PRECIOS_BENEFICIO[clase_barco]
+                total_price == PRECIOS_BENEFICIO[clase_barco]
                 item_title += " (Beneficio >150km)"
                 app.logger.info(f"Aplicando beneficio fijo de {PRECIOS_BENEFICIO[clase_barco]} para {clase_barco}.")
             else:

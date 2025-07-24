@@ -26,6 +26,13 @@ body {
     color: #007bff; /* Color primario para títulos (Bootstrap blue) */
 }
 
+header {
+  min-height: 30vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
 /* Estilos específicos para el título principal en success.html */
 h1 {
     color: rgb(58, 90, 165); /* Color azul específico para h1 */
@@ -54,7 +61,7 @@ h1 {
 .redirect-message {
     font-size: 1.3em; /* Ajusta este valor para hacerlo más grande o más pequeño */
     font-weight: bold; /* Opcional: para que resalte más */
-    color: #28a745; /* Opcional: un color que lo haga destacar, como el verde de éxito */
+    color: rgb(58, 90, 165); 
 }
 
 /* Estilo para el botón de redirección manual */

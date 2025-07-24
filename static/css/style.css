@@ -33,7 +33,7 @@ header {
     position: relative;}
 
 /* Estilos específicos para el título principal en success.html */
-h1 {
+h1, label {
     color: #0065bd; /* Color azul específico para h1 */
 }
 

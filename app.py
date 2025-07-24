@@ -117,7 +117,6 @@ def process_inscription():
                     "currency_id": "ARS" 
                 }
             ],
-            "external_reference": "METRO",
             "back_urls": {
                 # Añadir clase_barco como parámetro a las URLs de retorno
                 "success": f"{URL_BASE}/payment_success?clase_barco={encoded_clase_barco}", 
@@ -125,7 +124,7 @@ def process_inscription():
                 "failure": f"{URL_BASE}/payment_failure?clase_barco={encoded_clase_barco}"
             },
             "auto_return": "approved", 
-            "external_reference": f"inscripcion_comp_{clase_barco or 'no_barco'}_{os.urandom(8).hex()}"
+            "external_reference": f"METRO_{clase_barco or 'no_barco'}"
         }
 
         try:

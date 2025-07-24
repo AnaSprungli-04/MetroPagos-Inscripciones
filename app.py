@@ -1,5 +1,3 @@
-# app.py
-
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import mercadopago
 import os
@@ -27,8 +25,7 @@ GOOGLE_FORMS_ENTRY_ID_CLASE_BARCO = "entry.1553765108" # <-- ¡NUEVA CONSTANTE!
 
 # --- ID DEL GOOGLE FORMS PARA ENTRENADORES ---
 # ¡Reemplaza con el ID real de tu NUEVO Google Forms para ENTRENADORES!
-GOOGLE_FORMS_ENTRENADORES_ID = "1A51UGY1LlPKfszRxF6s_s60KQK_0hsngb7waMLHYsJk" # <-- ¡REEMPLAZA ESTO!
-
+GOOGLE_FORMS_ENTRENADORES_ID = "1FAIpQLSeZGar2xA3OR6SwNbKatSj1CLWQjRTmWyM0t-LOabpRWZYZ4g" # <-- ¡REEMPLAZA ESTO!
 # --- URL BASE PARA PRODUCCIÓN ---
 # ¡IMPORTANTE! Cuando tu aplicación esté desplegada en Render, Render te dará una URL.
 # REEMPLAZA "https://tu-app-en-render.onrender.com" con la URL HTTPS REAL de tu aplicación desplegada.
@@ -42,16 +39,26 @@ BASE_PRECIOS = {
 }
 
 PRECIOS_BARCOS = {
-    'Optimist Principiantes': 10,
-    'Optimist Timoneles': 10,
-    'ILCA 7': 20,
-    'ILCA 6': 20,
-    'ILCA 4': 20,
-    '420': 15,
-    '29er': 15
+    'Optimist Principiantes': 70000,
+    'Optimist Timoneles': 70000,
+    'ILCA 7': 40000,
+    'ILCA 6': 70000,
+    'ILCA 4': 70000,
+    '420': 120000,
+    '29er': 120000
 }
 
-BENEFICIO_DISTANCIA_PORCENTAJE = 0.10 # 10% de descuento
+# --- NUEVOS PRECIOS DE BENEFICIO FIJO POR CLASE DE BARCO ---
+PRECIOS_BENEFICIO = {
+    'Optimist Principiantes': 60000,
+    'Optimist Timoneles': 60000,
+    'ILCA 7': 35000,
+    'ILCA 6': 60000,
+    'ILCA 4': 60000,
+    '420': 100000,
+    '29er': 100000
+}
+
 
 # --- RUTAS DE LA APLICACIÓN ---
 
@@ -91,9 +98,15 @@ def process_inscription():
             app.logger.error("Competidor sin clase de barco o clase de barco inválida.")
             return "Error: Por favor, selecciona tu clase de barco.", 400
 
+        # --- LÓGICA PARA EL BENEFICIO FIJO ---
         if mas_150km:
-            total_price -= (total_price * BENEFICIO_DISTANCIA_PORCENTAJE)
-            item_title += " (Beneficio >150km)"
+            if clase_barco in PRECIOS_BENEFICIO:
+                total_price -= PRECIOS_BENEFICIO[clase_barco]
+                item_title += " (Beneficio >150km)"
+                app.logger.info(f"Aplicando beneficio fijo de {PRECIOS_BENEFICIO[clase_barco]} para {clase_barco}.")
+            else:
+                app.logger.warning(f"Clase de barco '{clase_barco}' no tiene un beneficio fijo definido, no se aplicará descuento por distancia.")
+        # --- FIN LÓGICA PARA EL BENEFICIO FIJO ---
 
         # Asegura que el precio mínimo sea 1 (Mercado Pago requiere un precio mínimo)
         total_price = max(1, round(total_price, 2))
@@ -112,6 +125,7 @@ def process_inscription():
                     "currency_id": "ARS" 
                 }
             ],
+            "external_reference": "METRO",
             "back_urls": {
                 # Añadir clase_barco como parámetro a las URLs de retorno
                 "success": f"{URL_BASE}/payment_success?clase_barco={encoded_clase_barco}", 
@@ -244,4 +258,3 @@ def mercadopago_webhook():
 if __name__ == '__main__':
     # Para producción, desactiva debug=True y usa un servidor WSGI como Gunicorn
     app.run(debug=True, port=5000)
-

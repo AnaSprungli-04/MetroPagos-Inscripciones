@@ -16,7 +16,7 @@ app.logger.setLevel(logging.INFO)
 # --- CONFIGURACIÓN DE MERCADO PAGO ---
 # ¡IMPORTANTE! En producción, carga esto desde una variable de entorno por seguridad.
 # NO lo dejes harcodeado en el código fuente de tu repositorio público.
-MERCADO_PAGO_ACCESS_TOKEN = os.environ.get("MERCADO_PAGO_ACCESS_TOKEN")
+MERCADO_PAGO_ACCESS_TOKEN = "APP_USR-7537326222958564-081218-f140a7092210c4627290c9305af29e0f-1123457005"
 sdk = mercadopago.SDK(MERCADO_PAGO_ACCESS_TOKEN)
 
 app.logger.info(f"DEBBUGING: {MERCADO_PAGO_ACCESS_TOKEN[:10]}")

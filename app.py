@@ -4,6 +4,10 @@ import os
 import logging
 import urllib.parse # Importar para codificar URLs
 
+from dotenv import load_dotenv
+
+load_dotenv() # Carga las variables del archivo .env
+# ... el resto de tu código
 app = Flask(__name__)
 
 # Configuración del logger para ver los mensajes en la consola

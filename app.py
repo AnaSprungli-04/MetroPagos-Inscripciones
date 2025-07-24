@@ -246,4 +246,4 @@ def mercadopago_webhook():
 # --- INICIAR EL SERVIDOR FLASK ---
 if __name__ == '__main__':
     # Para producción, desactiva debug=True y usa un servidor WSGI como Gunicorn
-    app.run(debug=True, port=5000)
+    app.run(debug=False, port=5000)

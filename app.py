@@ -15,24 +15,13 @@ app.logger.setLevel(logging.INFO)
 MERCADO_PAGO_ACCESS_TOKEN = os.environ.get("MERCADO_PAGO_ACCESS_TOKEN", "TEST-7537326222958564-081218-6f78e1f990e1b269a602202189d4f203-1123457005")
 sdk = mercadopago.SDK(MERCADO_PAGO_ACCESS_TOKEN)
 
-# --- ID DEL GOOGLE FORMS PARA COMPETIDORES Y SU CAMPO DE NÚMERO DE OPERACIÓN ---
-# ¡Reemplaza con el ID real de tu Google Forms para COMPETIDORES!
-GOOGLE_FORMS_COMPETIDORES_ID = "1FAIpQLSeA0tbwyKZ-u8zra-W6hlJL8TCTQOayqCpKwya3sON0ubS0nA" # EJEMPLO: REEMPLAZA
-# Este ID es para el campo "Número de Operación" en el form de COMPETIDORES
+GOOGLE_FORMS_COMPETIDORES_ID = "1FAIpQLSeA0tbwyKZ-u8zra-W6hlJL8TCTQOayqCpKwya3sON0ubS0nA" 
 GOOGLE_FORMS_ENTRY_ID_NUM_OPERACION = "entry.1161481877"
-# Este ID es para el campo "Clase de Barco" en el form de COMPETIDORES (según tu ejemplo)
-GOOGLE_FORMS_ENTRY_ID_CLASE_BARCO = "entry.1553765108" # <-- ¡NUEVA CONSTANTE!
-
-# --- ID DEL GOOGLE FORMS PARA ENTRENADORES ---
-# ¡Reemplaza con el ID real de tu NUEVO Google Forms para ENTRENADORES!
-GOOGLE_FORMS_ENTRENADORES_ID = "1FAIpQLSeZGar2xA3OR6SwNbKatSj1CLWQjRTmWyM0t-LOabpRWZYZ4g" # <-- ¡REEMPLAZA ESTO!
-# --- URL BASE PARA PRODUCCIÓN ---
-# ¡IMPORTANTE! Cuando tu aplicación esté desplegada en Render, Render te dará una URL.
-# REEMPLAZA "https://tu-app-en-render.onrender.com" con la URL HTTPS REAL de tu aplicación desplegada.
-# Por ejemplo: "https://mi-evento-inscripciones.onrender.com"
+GOOGLE_FORMS_ENTRY_ID_CLASE_BARCO = "entry.1553765108" 
+GOOGLE_FORMS_ENTRENADORES_ID = "1FAIpQLSeZGar2xA3OR6SwNbKatSj1CLWQjRTmWyM0t-LOabpRWZYZ4g" 
 URL_BASE = "https://metropolitanopagos-inscripciones.onrender.com" 
 
-# --- LÓGICA DE PRECIOS ---
+
 BASE_PRECIOS = {
     'entrenador': 0,
     'competidor': 0
@@ -108,7 +97,6 @@ def process_inscription():
                 app.logger.warning(f"Clase de barco '{clase_barco}' no tiene un beneficio fijo definido, no se aplicará descuento por distancia.")
         # --- FIN LÓGICA PARA EL BENEFICIO FIJO ---
 
-        # Asegura que el precio mínimo sea 1 (Mercado Pago requiere un precio mínimo)
         total_price = max(1, round(total_price, 2))
 
         app.logger.info(f"Calculando precio para competidor: Rol={rol}, >150km={mas_150km}, Barco={clase_barco} -> Precio Final={total_price}")
@@ -164,7 +152,7 @@ def payment_success():
     payment_id = request.args.get('payment_id') 
     status = request.args.get('status') 
     collection_id = request.args.get('collection_id') 
-    clase_barco = request.args.get('clase_barco') # <-- ¡Recuperamos la clase_barco!
+    clase_barco = request.args.get('clase_barco')
     
     app.logger.info(f"Redirección de éxito de MP recibida. Payment ID: {payment_id}, Status: {status}, Collection ID: {collection_id}, Clase Barco: {clase_barco}")
 
@@ -232,8 +220,6 @@ def mercadopago_webhook():
                 app.logger.info(f"Detalles del pago del Webhook: ID={payment_id}, Estado={payment_status}, Ref. Externa={external_reference}")
 
                 # --- AQUÍ ES DONDE ACTUALIZARÍAS TU BASE DE DATOS ---
-                # Dependiendo del 'payment_status' ('approved', 'pending', 'rejected', etc.)
-                # actualiza el estado de la inscripción en tu sistema.
                 if payment_status == 'approved':
                     app.logger.info(f"Pago {payment_id} APROBADO. Actualizando estado de inscripción para {external_reference}.")
                     # Lógica para marcar la inscripción como pagada en tu DB

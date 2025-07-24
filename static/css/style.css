@@ -3,7 +3,8 @@ body {
     min-height: 90vh;
     margin: 0;
     padding: 20px;
-    box-sizing: border-box; 
+    box-sizing: border-box;
+    font-family: arial, 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif; 
 }
 
 /* Estilos para el contenedor principal */
@@ -22,7 +23,7 @@ body {
 
 /* Estilos para los títulos dentro de las tarjetas */
 .card-title {
-    color: #007bff; /* Color primario para títulos (Bootstrap blue) */
+    color: #0065bd; /* Color primario para títulos (Bootstrap blue) */
 }
 
 header {
@@ -35,7 +36,7 @@ header {
 
 /* Estilos específicos para el título principal en success.html */
 h1 {
-    color: rgb(58, 90, 165); /* Color azul específico para h1 */
+    color: 0065bd; /* Color azul específico para h1 */
 }
 
 /* Estilos para el spinner de carga */
@@ -43,7 +44,7 @@ h1 {
     width: 3rem;
     height: 3rem;
     margin-top: 1.5rem;
-    color: #0d6efd; /* Color primario de Bootstrap */
+    color: #0065bd; /* Color primario de Bootstrap */
     /* Asegura que el spinner sea visible y tenga un tamaño mínimo */
     display: inline-block;
     vertical-align: -0.125em;
@@ -59,19 +60,16 @@ h1 {
 
 /* Estilo para el mensaje de redirección automática */
 .redirect-message {
-    font-size: 1.3em; /* Ajusta este valor para hacerlo más grande o más pequeño */
-    font-weight: bold; /* Opcional: para que resalte más */
-    color: rgb(58, 90, 165); 
+    font-size: 1.3em; 
+    font-weight: bold; 
+    color: 0065bd; 
 }
 
-/* Estilo para el botón de redirección manual */
 .btn-redirect {
-    margin-top: 20px; /* Espacio superior para el botón */
-    padding: 12px 30px; /* Relleno del botón */
-    font-size: 1.1em; /* Tamaño de fuente del botón */
-}
+    margin-top: 20px; 
+    padding: 12px 30px; 
+    font-size: 1.1em; }
 
-/* Estilo para el iframe incrustado de Google Forms */
 .embed-responsive {
     position: relative;
     display: block;

@@ -27,7 +27,8 @@
                         <form id="inscriptionForm" action="{{ url_for('process_inscription') }}" method="POST">
                             <div class="mb-4 align-items-center text-center">
                                 <label class="form-label d-block mb-1">¿Cuál es tu rol?</label>
-                                <div class="form-check form-check-inline row-gap-3">
+                                <div class="row-gap-3">
+                                <div class="form-check form-check-inline ">
                                     <input class="form-check-input" type="radio" name="rol" id="rolEntrenador" value="entrenador" required>
                                     <label class="form-check-label" for="rolEntrenador">Entrenador</label>
                                 </div>
@@ -35,7 +36,7 @@
                                     <input class="form-check-input" type="radio" name="rol" id="rolCompetidor" value="competidor" required>
                                     <label class="form-check-label" for="rolCompetidor">Competidor</label>
                                 </div>
-                            </div>
+                            </div></div>
 
                             <div id="competidorFields" style="display: none;">
                                 <div id="claseBarcoGroup" class="mb-2">

@@ -128,8 +128,8 @@ def process_inscription():
                 "failure": f"{URL_BASE}/payment_failure?clase_barco={encoded_clase_barco}"
             },
             "auto_return": "approved", 
-            "external_reference": f"METRO_{clase_barco or 'no_barco'}"
-            "payment_method":{
+            "external_reference": f"METRO_{clase_barco or 'no_barco'}",
+            "payment_method": {
                 "excluded_payment_types":[
                     {"id":"ticket"}
                 ]

@@ -129,6 +129,11 @@ def process_inscription():
             },
             "auto_return": "approved", 
             "external_reference": f"METRO_{clase_barco or 'no_barco'}"
+            "payment_method":{
+                "excluded_payment_types":[
+                    {"id":"ticket"}
+                ]
+            }
         }
 
         try:

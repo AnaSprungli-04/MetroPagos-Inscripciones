@@ -18,7 +18,7 @@ app.logger.setLevel(logging.INFO)
 # NO lo dejes harcodeado en el código fuente de tu repositorio público.
 MERCADO_PAGO_ACCESS_TOKEN= os.environ.get("MERCADO_PAGO_ACCESS_TOKEN")
 MERCADO_PAGO_PUBLIC_KEY= os.environ.get("MERCADO_PAGO_PUBLIC_KEY")
-sdk = mercadopago.SDK(MERCADO_PAGO_ACCESS_TOKEN)
+sdk = mercadopago.SDK(MERCADO_PAGO_ACCESS_TOKEN, sandbox=False)
 
 app.logger.info(f"DEBBUGING: {MERCADO_PAGO_ACCESS_TOKEN[:20]}")
 app.logger.info(f"DEBUGGING PUBLIC KEY: {MERCADO_PAGO_PUBLIC_KEY[:20]}...")

@@ -6,8 +6,8 @@ import urllib.parse # Importar para codificar URLs
 
 from dotenv import load_dotenv
 
-load_dotenv() # Carga las variables del archivo .env
-# ... el resto de tu código
+# load_dotenv() 
+
 app = Flask(__name__)
 
 # Configuración del logger para ver los mensajes en la consola
@@ -16,8 +16,8 @@ app.logger.setLevel(logging.INFO)
 # --- CONFIGURACIÓN DE MERCADO PAGO ---
 # ¡IMPORTANTE! En producción, carga esto desde una variable de entorno por seguridad.
 # NO lo dejes harcodeado en el código fuente de tu repositorio público.
-MERCADO_PAGO_ACCESS_TOKEN = os.environ.get("MERCADO_PAGO_ACCESS_TOKEN")
-MERCADO_PAGO_PUBLIC_KEY = os.environ.get("MERCADO_PAGO_PUBLIC_KEY") # ¡NUEVO! Necesitas tu Public Key
+MERCADO_PAGO_ACCESS_TOKEN= os.environ.get("MERCADO_PAGO_ACCESS_TOKEN")
+MERCADO_PAGO_PUBLIC_KEY= os.environ.get("MERCADO_PAGO_PUBLIC_KEY")
 sdk = mercadopago.SDK(MERCADO_PAGO_ACCESS_TOKEN)
 
 app.logger.info(f"DEBBUGING: {MERCADO_PAGO_ACCESS_TOKEN[:20]}")

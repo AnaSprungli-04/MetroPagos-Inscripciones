@@ -115,11 +115,21 @@ def process_inscription():
         encoded_clase_barco = urllib.parse.quote_plus(clase_barco)
 
         payer_email = request.form.get('email') if rol == 'competidor' else None
+        payer_nombre = request.form.get('nombre') if rol == 'competidor' else None
+        payer_apellido = request.form.get('apellido') if rol == 'competidor' else None
+        payer_dni = request.form.get('dni') if rol == 'competidor' else None
         app.logger.info(f"Email recibido en formulario: {payer_email}")
         if rol == 'competidor' and (not payer_email or payer_email.strip() == ""):
             app.logger.error("No se recibió un email válido para el competidor. No se puede crear la preferencia de pago.")
             return "Error: Debes ingresar un email válido para continuar con el pago.", 400
 
+        payer_data = {"email": payer_email}
+        if payer_nombre:
+            payer_data["name"] = payer_nombre
+        if payer_apellido:
+            payer_data["surname"] = payer_apellido
+        if payer_dni:
+            payer_data["identification"] = {"type": "DNI", "number": payer_dni}
         preference_data = {
             "items": [
                 {
@@ -129,7 +139,6 @@ def process_inscription():
                     "currency_id": "ARS"
                 }
             ],
-
             "back_urls": {
                 "success": f"{URL_BASE}/payment_success?clase_barco={encoded_clase_barco}",
                 "pending": f"{URL_BASE}/payment_pending?clase_barco={encoded_clase_barco}",
@@ -139,10 +148,10 @@ def process_inscription():
             "external_reference": f"METRO_{clase_barco or 'no_barco'}",
             "payment_methods": {
                 "excluded_payment_types": [
-                    {"id": "ticket"} # Excluye pagos en efectivo (ticket)
+                    {"id": "ticket"}
                 ]
             },
-            "payer": {"email": payer_email} if payer_email else {}
+            "payer": payer_data
         }
 
         try:

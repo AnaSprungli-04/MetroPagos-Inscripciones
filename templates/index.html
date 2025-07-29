@@ -50,6 +50,18 @@
                                     </select>
                                 </div>
                                 <div class="mb-3">
+                                    <label for="nombre" class="form-label">Nombre:</label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" required placeholder="Tu nombre">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="apellido" class="form-label">Apellido:</label>
+                                    <input type="text" class="form-control" id="apellido" name="apellido" required placeholder="Tu apellido">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="dni" class="form-label">DNI:</label>
+                                    <input type="text" class="form-control" id="dni" name="dni" required placeholder="Tu DNI">
+                                </div>
+                                <div class="mb-3">
                                     <label for="email" class="form-label">Email de contacto:</label>
                                     <input type="email" class="form-control" id="email" name="email" required placeholder="tu@email.com">
                                 </div>
@@ -84,12 +96,18 @@
                 const claseBarcoSelect = document.getElementById('claseBarco');
                 const mas150kmCheckbox = document.getElementById('mas_150km');
                 const emailInput = document.getElementById('email');
+                const nombreInput = document.getElementById('nombre');
+                const apellidoInput = document.getElementById('apellido');
+                const dniInput = document.getElementById('dni');
 
                 function toggleCompetidorFields() {
                     if (rolCompetidor.checked) {
                         competidorFields.style.display = 'block';
                         claseBarcoSelect.setAttribute('required', 'required');
                         emailInput.setAttribute('required', 'required');
+                        nombreInput.setAttribute('required', 'required');
+                        apellidoInput.setAttribute('required', 'required');
+                        dniInput.setAttribute('required', 'required');
                     } else {
                         competidorFields.style.display = 'none';
                         claseBarcoSelect.removeAttribute('required');
@@ -97,6 +115,12 @@
                         mas150kmCheckbox.checked = false;
                         emailInput.removeAttribute('required');
                         emailInput.value = '';
+                        nombreInput.removeAttribute('required');
+                        nombreInput.value = '';
+                        apellidoInput.removeAttribute('required');
+                        apellidoInput.value = '';
+                        dniInput.removeAttribute('required');
+                        dniInput.value = '';
                     }
                 }
                 rolEntrenador.addEventListener('change', toggleCompetidorFields);

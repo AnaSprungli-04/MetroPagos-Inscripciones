@@ -145,10 +145,8 @@ def process_inscription():
             preference = preference_response["response"]
 
             if preference_response["status"] == 201:
-                # ¡CAMBIO CLAVE AQUÍ!
-                # En lugar de redirigir a init_point, rediriges a tu propia página de checkout
-                # y le pasas el ID de la preferencia y la Public Key
                 app.logger.info(f"Preferencia creada exitosamente. ID: {preference['id']}")
+                app.logger.info(f"Detalles completos de la preferencia creada: {preference}")
                 return redirect(url_for('render_checkout_bricks',
                                         preference_id=preference['id'],
                                         clase_barco=encoded_clase_barco,
@@ -173,7 +171,7 @@ def render_checkout_bricks():
     public_key = request.args.get('public_key')
     transaction_amount = request.args.get('transaction_amount')
 
-    if not preference_id or not public_key or not transaction_amount: # <-- ¡Corregido: validación de transaction_amount!
+    if not preference_id or not public_key or not transaction_amount:
         app.logger.error("Faltan parámetros necesarios para renderizar el Checkout Bricks.")
         return "Error: No se pudo cargar la página de pago. Faltan datos.", 400
 
@@ -292,7 +290,7 @@ def process_payment_with_brick():
         if not transaction_amount:
             app.logger.error("transaction_amount no recibido o es cero en /process_payment_with_brick.")
             return jsonify({"status": "error", "message": "Monto de transacción requerido."}), 400
-
+        
         # Recuperar email del pagador. El Brick debería proveerlo.
         payer_email = payment_data.get('payer', {}).get('email')
         if not payer_email:
@@ -311,10 +309,6 @@ def process_payment_with_brick():
             "payment_method_id": payment_data['payment_method_id'],
             "payer": {
                 "email": payer_email,
-                # Agrega más datos del pagador si están disponibles y son relevantes
-                # "first_name": payment_data['payer'].get('first_name'),
-                # "last_name": payment_data['payer'].get('last_name'),
-                # "identification": payment_data['payer'].get('identification', {})
             },
             "external_reference": payment_data.get('external_reference', f"METRO_BRICK_{clase_barco_from_data}"), # <-- ¡Corregido aquí!
             "notification_url": f"{URL_BASE}/mercadopago-webhook",

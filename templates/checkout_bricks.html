@@ -62,6 +62,14 @@
         const claseBarco = "{{ clase_barco }}"; // Puedes pasar esta variable si la necesitas en el JS
         const transactionAmount = parseFloat("{{ transaction_amount }}");
 
+        console.log("------------------------------------------");
+        console.log("Iniciando Payment Brick con los siguientes datos:");
+        console.log("Preference ID:", preferenceId);
+        console.log("Public Key:", publicKey);
+        console.log("Transaction Amount:", transactionAmount);
+        console.log("------------------------------------------");
+
+        
         // Inicializa el SDK de Mercado Pago con tu Public Key
         const mp = new MercadoPago(publicKey, {
             locale: 'es-AR' // O el locale que corresponda

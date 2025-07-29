@@ -98,6 +98,11 @@
                     },
                     onSubmit: ({ selectedPaymentMethod, formData }) => {
                         console.log('onSubmit event', selectedPaymentMethod, formData);
+                        // Validar que payment_method_id esté presente
+                        if (!formData.payment_method_id) {
+                            alert('Por favor, selecciona un método de pago antes de continuar.');
+                            return Promise.reject('Método de pago no seleccionado');
+                        }
 
                         // Asegúrate que formData tenga el monto. El Brick debería proveerlo si preferenceId se usa.
                         if (!formData.transaction_amount) {

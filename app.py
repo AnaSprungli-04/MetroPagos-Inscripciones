@@ -114,6 +114,8 @@ def process_inscription():
         # Codificar la clase_barco para URL
         encoded_clase_barco = urllib.parse.quote_plus(clase_barco)
 
+        payer_email = request.form.get('email') if rol == 'competidor' else None
+
         preference_data = {
             "items": [
                 {
@@ -135,7 +137,8 @@ def process_inscription():
                 "excluded_payment_types": [
                     {"id": "ticket"} # Excluye pagos en efectivo (ticket)
                 ]
-            }
+            },
+            "payer": {"email": payer_email} if payer_email else {}
         }
 
         try:
@@ -282,6 +285,13 @@ def process_payment_with_brick():
     try:
         payment_data = request.json
         app.logger.info(f"Datos de pago recibidos del Brick: {payment_data}")
+
+        if 'payment_method_id' not in payment_data or not payment_data['payment_method_id']:
+            app.logger.error("payment_method_id no recibido o vacío en /process_payment_with_brick.")
+            return jsonify({"status": "error", "message": "Método de pago requerido (payment_method_id)."}), 400
+        if 'token' not in payment_data or not payment_data['token']:
+            app.logger.error("token no recibido o vacío en /process_payment_with_brick.")
+            return jsonify({"status": "error", "message": "Token de pago requerido (token)."}), 400
 
         transaction_amount = float(payment_data.get('transaction_amount', 0.0))
         if not transaction_amount:

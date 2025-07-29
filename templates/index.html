@@ -49,7 +49,10 @@
                                         <option value="29er">29er</option>
                                     </select>
                                 </div>
-
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email de contacto:</label>
+                                    <input type="email" class="form-control" id="email" name="email" required placeholder="tu@email.com">
+                                </div>
                                 <div class="mb-4 form-check">
                                     <input type="checkbox" class="form-check-input" id="mas_150km" name="mas_150km">
                                     <label class="form-check-label" for="mas_150km">Mi residencia habitual está a más de 150 km de CABA (aplica beneficio 4.2 del AR)</label>
@@ -77,27 +80,27 @@
             document.addEventListener('DOMContentLoaded', function() {
                 const rolEntrenador = document.getElementById('rolEntrenador');
                 const rolCompetidor = document.getElementById('rolCompetidor');
-                const competidorFields = document.getElementById('competidorFields'); // Nuevo contenedor
+                const competidorFields = document.getElementById('competidorFields');
                 const claseBarcoSelect = document.getElementById('claseBarco');
-                const mas150kmCheckbox = document.getElementById('mas_150km'); // El checkbox de distancia
+                const mas150kmCheckbox = document.getElementById('mas_150km');
+                const emailInput = document.getElementById('email');
 
                 function toggleCompetidorFields() {
                     if (rolCompetidor.checked) {
-                        competidorFields.style.display = 'block'; // Mostrar todos los campos de competidor
-                        claseBarcoSelect.setAttribute('required', 'required'); 
+                        competidorFields.style.display = 'block';
+                        claseBarcoSelect.setAttribute('required', 'required');
+                        emailInput.setAttribute('required', 'required');
                     } else {
-                        competidorFields.style.display = 'none'; // Ocultar todos los campos de competidor
-                        claseBarcoSelect.removeAttribute('required'); // No obligatorio
-                        claseBarcoSelect.value = ''; // Limpiar selección
-                        mas150kmCheckbox.checked = false; // Desmarcar el checkbox
+                        competidorFields.style.display = 'none';
+                        claseBarcoSelect.removeAttribute('required');
+                        claseBarcoSelect.value = '';
+                        mas150kmCheckbox.checked = false;
+                        emailInput.removeAttribute('required');
+                        emailInput.value = '';
                     }
                 }
-
-                // Escuchar cambios en los radio buttons de rol
                 rolEntrenador.addEventListener('change', toggleCompetidorFields);
                 rolCompetidor.addEventListener('change', toggleCompetidorFields);
-
-                // Inicializar al cargar la página
                 toggleCompetidorFields();
             });
         </script>

@@ -1,161 +1,163 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="https://sdk.mercadopago.com/js/v2"></script>
-    <style>
-        /* Estilos básicos para centrar el Brick y hacerlo responsivo */
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f0f2f5;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            width: 100%;
-            text-align: center;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 25px;
-            font-size: 1.8em;
-        }
-        /* Estilos para el contenedor del Brick */
-        #paymentBrick_container {
-            min-height: 300px; /* Asegura un espacio mínimo para que el Brick se muestre */
-            margin-top: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .loading-message {
-            color: #555;
-            font-size: 1.1em;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Confirmar tu pago</h1>
-        <p>Estás a un paso de completar tu inscripción.</p>
-        <div id="paymentBrick_container">
-            <p class="loading-message"></p>
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{ page_title }}</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <!-- SDK de Mercado Pago -->
+        <script src="https://sdk.mercadopago.com/js/v2"></script>
+        <style>
+            /* Estilos básicos para centrar el Brick y hacerlo responsivo */
+            body {
+                font-family: Arial, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                background-color: #f0f2f5;
+                margin: 0;
+                padding: 20px;
+                box-sizing: border-box;
+            }
+            .container {
+                background-color: #ffffff;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                max-width: 600px;
+                width: 100%;
+                text-align: center;
+            }
+            h1 {
+                color: #333;
+                margin-bottom: 25px;
+                font-size: 1.8em;
+            }
+            /* Estilos para el contenedor del Brick */
+            #paymentBrick_container {
+                min-height: 300px; /* Asegura un espacio mínimo para que el Brick se muestre */
+                margin-top: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .loading-message {
+                color: #555;
+                font-size: 1.1em;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Confirmar tu pago</h1>
+            <p>Estás a un paso de completar tu inscripción.</p>
+            <div id="paymentBrick_container">
+                <p class="loading-message">Cargando opciones de pago...</p>
+            </div>
         </div>
-    </div>
 
-    <script>
-        const preferenceId = "{{ preference_id }}";
-        const publicKey = "{{ public_key }}";
-        const claseBarco = "{{ clase_barco }}"; // Puedes pasar esta variable si la necesitas en el JS
-        const transactionAmount = parseFloat("{{ transaction_amount }}");
+        <script>
+            const preferenceId = "{{ preference_id }}";
+            const publicKey = "{{ public_key }}"; // Esta será tu Public Key de producción
+            const claseBarco = "{{ clase_barco }}";
+            const transactionAmount = parseFloat("{{ transaction_amount }}");
 
-        console.log("------------------------------------------");
-        console.log("Iniciando Payment Brick con los siguientes datos:");
-        console.log("Preference ID:", preferenceId);
-        console.log("Public Key:", publicKey);
-        console.log("Transaction Amount:", transactionAmount);
-        console.log("------------------------------------------");
+            console.log("------------------------------------------");
+            console.log("Iniciando Payment Brick con los siguientes datos:");
+            console.log("Preference ID:", preferenceId);
+            console.log("Public Key:", publicKey);
+            console.log("Transaction Amount:", transactionAmount);
+            console.log("------------------------------------------");
 
-        
-        // Inicializa el SDK de Mercado Pago con tu Public Key
-        const mp = new MercadoPago(publicKey, {
-            locale: 'es-AR' // O el locale que corresponda
-        });
 
-        // Crea una instancia del Payment Brick
-        const bricksBuilder = mp.bricks();
+            const mp = new MercadoPago(publicKey, {
+                locale: 'es-AR'
+            });
 
-        bricksBuilder.create("payment", "paymentBrick_container", {
-            initialization: {
-                preferenceId: preferenceId,
-                 amount: transactionAmount,
-            },
-            customization: {
-                   paymentMethods: {
-                    
+            const bricksBuilder = mp.bricks();
+
+            bricksBuilder.create("payment", "paymentBrick_container", {
+                initialization: {
+                    preferenceId: preferenceId,
+                    amount: transactionAmount,
                 },
-                visual: {
-                    theme: 'default',
-                    hideFormTitle: true, // Oculta el título del formulario si no lo deseas
-                }
-            },
-            callbacks: {
-                onReady: () => {
-                    // Callback llamado cuando el Brick está listo para ser usado.
-                    console.log('Payment Brick está listo');
-                    document.querySelector('.loading-message').style.display = 'none'; // Oculta el mensaje de carga
+                customization: {
+                    paymentMethods: {
+                        // La exclusión de "ticket" se maneja directamente en la preferencia del backend.
+                    },
+                    visual: {
+                        theme: 'default',
+                        hideFormTitle: true,
+                    }
                 },
-                onSubmit: ({ selectedPaymentMethod, formData }) => {
-                    console.log('onSubmit event', selectedPaymentMethod, formData);
+                callbacks: {
+                    onReady: () => {
+                        console.log('Payment Brick está listo');
+                        document.querySelector('.loading-message').style.display = 'none';
+                    },
+                    onSubmit: ({ selectedPaymentMethod, formData }) => {
+                        console.log('onSubmit event', selectedPaymentMethod, formData);
 
-                    // ASEGURARSE DE QUE transaction_amount ESTÉ EN formData
-                    // El Brick debería agregarlo, pero lo confirmamos.
-                    if (!formData.transaction_amount) {
-                        formData.transaction_amount = transactionAmount; // Usamos el monto que pasamos desde Flask
-                    }
+                        // Asegúrate que formData tenga el monto. El Brick debería proveerlo si preferenceId se usa.
+                        if (!formData.transaction_amount) {
+                            formData.transaction_amount = transactionAmount;
+                        }
+                        
+                        // Asegúrate que formData tenga la descripción.
+                        if (!formData.description) {
+                            formData.description = "Inscripción Competidor - " + claseBarco;
+                        }
+                        // Asegúrate que formData tenga la referencia externa.
+                        if (!formData.external_reference) {
+                            formData.external_reference = `METRO_${claseBarco || 'no_barco'}`;
+                        }
+                        // Asegúrate que formData tenga el email del pagador. Es crucial en producción.
+                        if (!formData.payer || !formData.payer.email) {
+                            formData.payer = formData.payer || {};
+                            // En producción, aquí deberías tener el email real del usuario.
+                            // Si no lo recolectaste antes, es un buen momento para pedirlo o usar un default robusto.
+                            formData.payer.email = formData.payer.email || "email_cliente_real@ejemplo.com"; 
+                        }
 
-                    // Agregar descripción y referencia externa si no están ya en formData
-                    // (El Brick suele incluirlos si se inicializa con preferenceId)
-                    if (!formData.description) {
-                        formData.description = "Inscripción Competidor - " + claseBarco;
-                    }
-                    if (!formData.external_reference) {
-                        formData.external_reference = `METRO_${claseBarco || 'no_barco'}`;
-                    }
-                    if (!formData.payer || !formData.payer.email) {
-                        // Si el Brick no recolecta el email del pagador (ej. solo con wallet), 
-                        // podrías necesitar pasarlo de alguna otra forma.
-                        // Para pruebas, podrías usar un email dummy:
-                        formData.payer = formData.payer || {};
-                        formData.payer.email = formData.payer.email || "test_user@example.com"; 
-                    }
+                        // Envía la clase de barco a tu backend si la necesitas para el registro.
+                        formData.clase_barco = claseBarco; 
 
-                    return new Promise((resolve, reject) => {
-                        fetch("/process_payment_with_brick", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify(formData), // ENVIAR formData CON EL MONTO
-                        })
-                        .then((response) => response.json())
-                        .then((data) => {
-                            if (data.status === 'approved' || data.status === 'pending') {
-                                window.location.href = `/payment_success?payment_id=${data.payment_id}&status=${data.status}&collection_id=${data.payment_id}&clase_barco=${claseBarco}`;
-                                resolve();
-                            } else {
-                                window.location.href = `/payment_failure?payment_id=${data.payment_id || 'N/A'}&status=${data.status || 'rejected'}&clase_barco=${claseBarco}`;
+                        return new Promise((resolve, reject) => {
+                            fetch("/process_payment_with_brick", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify(formData),
+                            })
+                            .then((response) => response.json())
+                            .then((data) => {
+                                if (data.status === 'approved' || data.status === 'pending') {
+                                    // Redirecciona a tus páginas de éxito/pendiente
+                                    window.location.href = `/payment_success?payment_id=${data.payment_id}&status=${data.status}&collection_id=${data.payment_id}&clase_barco=${claseBarco}`;
+                                    resolve();
+                                } else {
+                                    // Redirecciona a tu página de fallo
+                                    window.location.href = `/payment_failure?payment_id=${data.payment_id || 'N/A'}&status=${data.status || 'rejected'}&clase_barco=${claseBarco}`;
+                                    reject();
+                                }
+                            })
+                            .catch((error) => {
+                                console.error('Error al procesar el pago desde el backend:', error);
+                                // En caso de error de red o del servidor, redirecciona a fallo.
+                                window.location.href = `/payment_failure?clase_barco=${claseBarco}`;
                                 reject();
-                            }
-                        })
-                        .catch((error) => {
-                            console.error('Error al procesar el pago desde el backend:', error);
-                            window.location.href = `/payment_failure?clase_barco=${claseBarco}`;
-                            reject();
+                            });
                         });
-                    });
-                },
-                onError: (error) => {
-                    // Callback llamado en caso de error durante la inicialización o el proceso del Brick
-                    console.error('Error en Payment Brick:', error);
-                    alert("Ocurrió un error al cargar las opciones de pago. Por favor, intenta de nuevo.");
-                    // Puedes redirigir a una página de error o mostrar un mensaje más amigable.
+                    },
+                    onError: (error) => {
+                        console.error('Error en Payment Brick:', error);
+                        alert("Ocurrió un error al cargar las opciones de pago. Por favor, intenta de nuevo. Detalles: " + (error.message || JSON.stringify(error)));
+                    },
                 },
             },
-        });
+        );
     </script>
-</body>
-</html>
+    </body>
+    </html>

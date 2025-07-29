@@ -123,9 +123,7 @@ def process_inscription():
                     "currency_id": "ARS"
                 }
             ],
-            # Las back_urls NO se usan directamente con Bricks, pero pueden ser útiles para notificaciones de pagos
-            # si Mercado Pago aún las envía para ciertos flujos o para debugging.
-            # Sin embargo, la lógica de redirección la manejas tú mismo en el front-end.
+          
             "back_urls": {
                 "success": f"{URL_BASE}/payment_success?clase_barco={encoded_clase_barco}",
                 "pending": f"{URL_BASE}/payment_pending?clase_barco={encoded_clase_barco}",
@@ -166,22 +164,22 @@ def process_inscription():
 # --- NUEVA RUTA PARA RENDERIZAR EL CHECKOUT BRICKS ---
 @app.route('/checkout_bricks')
 def render_checkout_bricks():
-    preference_id = request.args.get('preference_id')
-    clase_barco = request.args.get('clase_barco')
-    public_key = request.args.get('public_key')
-    transaction_amount = request.args.get('transaction_amount')
+        preference_id = request.args.get('preference_id')
+        clase_barco = request.args.get('clase_barco')
+        public_key = request.args.get('public_key')
+        transaction_amount = request.args.get('transaction_amount')
 
-    if not preference_id or not public_key or not transaction_amount:
-        app.logger.error("Faltan parámetros necesarios para renderizar el Checkout Bricks.")
-        return "Error: No se pudo cargar la página de pago. Faltan datos.", 400
+        if not preference_id or not public_key or not transaction_amount:
+            app.logger.error("Faltan parámetros necesarios para renderizar el Checkout Bricks.")
+            return "Error: No se pudo cargar la página de pago. Faltan datos.", 400
 
-    return render_template('checkout_bricks.html',
-                           preference_id=preference_id,
-                           clase_barco=clase_barco,
-                           public_key=public_key,
-                           transaction_amount=transaction_amount,
-                           page_title="Completa tu pago"
-                           )
+        return render_template('checkout_bricks.html',
+                               preference_id=preference_id,
+                               clase_barco=clase_barco,
+                               public_key=public_key,
+                               transaction_amount=transaction_amount,
+                               page_title="Completa tu pago"
+                               )
 @app.route('/payment_success')
 def payment_success():
     """
@@ -281,61 +279,62 @@ def mercadopago_webhook():
     return jsonify({"status": "ok"}), 200
 @app.route('/process_payment_with_brick', methods=['POST'])
 def process_payment_with_brick():
-    try:
-        payment_data = request.json
-        app.logger.info(f"Datos de pago recibidos del Brick: {payment_data}")
+        try:
+            payment_data = request.json
+            app.logger.info(f"Datos de pago recibidos del Brick: {payment_data}")
 
-        # Asegúrate de que transaction_amount está presente y es un número.
-        transaction_amount = float(payment_data.get('transaction_amount', 0.0))
-        if not transaction_amount:
-            app.logger.error("transaction_amount no recibido o es cero en /process_payment_with_brick.")
-            return jsonify({"status": "error", "message": "Monto de transacción requerido."}), 400
-        
-        # Recuperar email del pagador. El Brick debería proveerlo.
-        payer_email = payment_data.get('payer', {}).get('email')
-        if not payer_email:
-            app.logger.warning("Email del pagador no encontrado en los datos del Brick. Usando dummy para prueba.")
-            payer_email = "test_payer@example.com" # Considera cómo manejar esto en producción.
+            transaction_amount = float(payment_data.get('transaction_amount', 0.0))
+            if not transaction_amount:
+                app.logger.error("transaction_amount no recibido o es cero en /process_payment_with_brick.")
+                return jsonify({"status": "error", "message": "Monto de transacción requerido."}), 400
 
-        # Recuperar clase_barco si se envía desde el frontend en payment_data
-        clase_barco_from_data = payment_data.get('clase_barco', 'no_barco_brick')
+            payer_email = payment_data.get('payer', {}).get('email')
+            if not payer_email:
+                app.logger.warning("Email del pagador no encontrado en los datos del Brick. Usando dummy para prueba.")
+                payer_email = "test_payer@example.com" # Considera cómo manejar esto en producción. En prod, el email es clave.
+
+            clase_barco_from_data = payment_data.get('clase_barco', 'no_barco_brick')
 
 
-        payment_create_data = {
-            "transaction_amount": transaction_amount, # Usar el monto recibido del Brick
-            "token": payment_data['token'],
-            "description": payment_data.get('description', f"Inscripción a evento {clase_barco_from_data}"), # <-- ¡Corregido aquí!
-            "installments": int(payment_data['installments']),
-            "payment_method_id": payment_data['payment_method_id'],
-            "payer": {
-                "email": payer_email,
-            },
-            "external_reference": payment_data.get('external_reference', f"METRO_BRICK_{clase_barco_from_data}"), # <-- ¡Corregido aquí!
-            "notification_url": f"{URL_BASE}/mercadopago-webhook",
-        }
+            payment_create_data = {
+                "transaction_amount": transaction_amount,
+                "token": payment_data['token'],
+                "description": payment_data.get('description', f"Inscripción a evento {clase_barco_from_data}"),
+                "installments": int(payment_data['installments']),
+                "payment_method_id": payment_data['payment_method_id'],
+                "payer": {
+                    "email": payer_email,
+                    # Para producción, aquí es donde deberías enviar más datos del pagador
+                    # como identification (DNI/CUIT), name, surname, address.
+                    # Asegúrate de que tu frontend recolecta esta información y la envía.
+                    # "identification": payment_data.get('payer', {}).get('identification', {})
+                },
+                "external_reference": payment_data.get('external_reference', f"METRO_BRICK_{clase_barco_from_data}"),
+                "notification_url": f"{URL_BASE}/mercadopago-webhook", # Asegúrate que este webhook es público y Mercado Pago puede alcanzarlo
+            }
 
-        app.logger.info(f"Enviando solicitud de pago a MP: {payment_create_data}")
-        payment_response = sdk.payment().create(payment_create_data)
-        payment = payment_response["response"]
+            app.logger.info(f"Enviando solicitud de pago a MP: {payment_create_data}")
+            payment_response = sdk.payment().create(payment_create_data)
+            payment = payment_response["response"]
 
-        if payment_response["status"] == 201 or payment_response["status"] == 200:
-            return jsonify({
-                "status": payment['status'],
-                "payment_id": payment['id'],
-                "message": "Pago procesado con éxito."
-            }), 201
-        else:
-            app.logger.error(f"Error al procesar el pago final: {payment_response['status']} - {payment_response.get('response', 'No response body')}")
-            return jsonify({
-                "status": "error",
-                "message": payment.get("message", "Error desconocido al procesar el pago."),
-                "payment_id": payment.get('id', 'N/A'),
-                "error_detail": payment.get('cause', [])
-            }), payment_response["status"]
+            if payment_response["status"] == 201 or payment_response["status"] == 200:
+                return jsonify({
+                    "status": payment['status'],
+                    "payment_id": payment['id'],
+                    "message": "Pago procesado con éxito."
+                }), 201
+            else:
+                app.logger.error(f"Error al procesar el pago final: {payment_response['status']} - {payment_response.get('response', 'No response body')}")
+                return jsonify({
+                    "status": "error",
+                    "message": payment.get("message", "Error desconocido al procesar el pago."),
+                    "payment_id": payment.get('id', 'N/A'),
+                    "error_detail": payment.get('cause', [])
+                }), payment_response["status"]
 
-    except Exception as e:
-        app.logger.error(f"Excepción al procesar el pago desde el Brick: {e}", exc_info=True)
-        return jsonify({"status": "error", "message": "Error interno del servidor."}), 500
+        except Exception as e:
+            app.logger.error(f"Excepción al procesar el pago desde el Brick: {e}", exc_info=True)
+            return jsonify({"status": "error", "message": "Error interno del servidor."}), 500
         app.logger.error(f"Excepción al procesar el pago desde el Brick: {e}", exc_info=True)
         return jsonify({"status": "error", "message": "Error interno del servidor."}), 500
     

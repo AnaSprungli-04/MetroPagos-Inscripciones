@@ -101,6 +101,28 @@
                 // Inicializar al cargar la página
                 toggleCompetidorFields();
             });
+
+            document.getElementById('inscriptionForm').addEventListener('submit', async function(e) {
+                const rol = document.querySelector('input[name="rol"]:checked').value;
+                if (rol === 'competidor') {
+                    e.preventDefault();
+                    const clase_barco = document.getElementById('claseBarco').value;
+                    const mas_150km = document.getElementById('mas_150km').checked;
+                    // Llamar a /crear_preferencia
+                    const response = await fetch('/crear_preferencia', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ rol, clase_barco, mas_150km })
+                    });
+                    const data = await response.json();
+                    if (data.preference_id) {
+                        window.location.href = `/pagar_brick/${data.preference_id}`;
+                    } else {
+                        alert('Error al crear la preferencia de pago. Intenta nuevamente.');
+                    }
+                }
+                // Si es entrenador, submit normal
+            });
         </script>
     </body>
     </html>

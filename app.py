@@ -155,6 +155,53 @@ def process_inscription():
     else:
         return "Error: Rol no válido seleccionado.", 400
 
+@app.route('/crear_preferencia', methods=['POST'])
+def crear_preferencia():
+    data = request.get_json()
+    rol = data.get('rol')
+    mas_150km = data.get('mas_150km')
+    clase_barco = data.get('clase_barco')
+
+    if rol != 'competidor':
+        return jsonify({'error': 'Solo se puede crear preferencia para competidor'}), 400
+
+    total_price = BASE_PRECIOS['competidor']
+    if clase_barco in PRECIOS_BARCOS:
+        total_price += PRECIOS_BARCOS[clase_barco]
+    if mas_150km:
+        if clase_barco in PRECIOS_BENEFICIO:
+            total_price = PRECIOS_BENEFICIO[clase_barco]
+
+    item_title = f"Inscripción Competidor {clase_barco}"
+    preference_data = {
+        "items": [
+            {
+                "title": item_title,
+                "quantity": 1,
+                "unit_price": float(total_price),
+                "currency_id": "ARS"
+            }
+        ],
+        "external_reference": f"METRO_{clase_barco or 'no_barco'}",
+        "payment_methods": {
+            "excluded_payment_types": [
+                {"id": "ticket"}
+            ]
+        }
+    }
+    try:
+        preference_response = sdk.preference().create(preference_data)
+        preference_id = preference_response["response"]["id"]
+        return jsonify({"preference_id": preference_id})
+    except Exception as e:
+        app.logger.error(f"Error creando preferencia para Bricks: {e}")
+        return jsonify({"error": "No se pudo crear la preferencia"}), 500
+
+@app.route('/pagar_brick/<preference_id>')
+def pagar_brick(preference_id):
+    public_key = os.environ.get("MERCADO_PAGO_PUBLIC_KEY")
+    return render_template('payment_brick.html', preference_id=preference_id, public_key=public_key)
+
 @app.route('/payment_success')
 def payment_success():
     """

@@ -1,0 +1,53 @@
+<!-- payment_brick.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Pagar inscripción</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <style>
+        .loader { margin: 2em auto; border: 8px solid #f3f3f3; border-top: 8px solid #3498db; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .mensaje-externo { font-size: 1.2em; color: #333; margin-bottom: 1em; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pago de inscripción</h1>
+        <div class="mensaje-externo">
+            Por favor, completá el pago a continuación. <br>
+            <b>No cierres esta ventana</b> hasta que el proceso termine.<br>
+            Serás redirigido automáticamente al finalizar.
+        </div>
+        <div id="loader" class="loader" style="display:none;"></div>
+        <div id="paymentBrick_container"></div>
+        <div id="error-message" style="color:red; text-align:center; display:none;"></div>
+    </div>
+    <script>
+        const mp = new MercadoPago('{{ public_key }}');
+        document.getElementById('loader').style.display = 'block';
+        mp.bricks().create("payment", "paymentBrick_container", {
+            initialization: {
+                preferenceId: "{{ preference_id }}"
+            },
+            callbacks: {
+                onReady: () => {
+                    document.getElementById('loader').style.display = 'none';
+                },
+                onSubmit: (formData) => {
+                    document.getElementById('loader').style.display = 'block';
+                },
+                onError: (error) => {
+                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('error-message').innerText = 'Ocurrió un error al procesar el pago. Intentá nuevamente.';
+                    document.getElementById('error-message').style.display = 'block';
+                },
+                onPaymentApproved: (payment) => {
+                    window.location.href = `/payment_success?payment_id=${payment.id}`;
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

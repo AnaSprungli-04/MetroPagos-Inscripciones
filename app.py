@@ -115,6 +115,10 @@ def process_inscription():
         encoded_clase_barco = urllib.parse.quote_plus(clase_barco)
 
         payer_email = request.form.get('email') if rol == 'competidor' else None
+        app.logger.info(f"Email recibido en formulario: {payer_email}")
+        if rol == 'competidor' and (not payer_email or payer_email.strip() == ""):
+            app.logger.error("No se recibió un email válido para el competidor. No se puede crear la preferencia de pago.")
+            return "Error: Debes ingresar un email válido para continuar con el pago.", 400
 
         preference_data = {
             "items": [

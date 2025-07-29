@@ -283,7 +283,7 @@ def process_payment_with_brick():
     """
     try:
         payment_data = request.json
-        app.logger.info(f"Datos de pago recibidos del Brick: {payment_data}")  h
+        app.logger.info(f"Datos de pago recibidos del Brick: {payment_data}"),
         payment_create_data = {
             "transaction_amount": float(payment_data['transaction_amount']), # Monto total
             "token": payment_data['token'],

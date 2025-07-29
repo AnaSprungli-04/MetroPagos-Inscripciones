@@ -6,8 +6,8 @@ import urllib.parse # Importar para codificar URLs
 
 from dotenv import load_dotenv
 
-load_dotenv() # Descomentado para asegurar carga de .env en desarrollo local
-
+load_dotenv() # Carga las variables del archivo .env
+# ... el resto de tu código
 app = Flask(__name__)
 
 # Configuración del logger para ver los mensajes en la consola
@@ -17,20 +17,17 @@ app.logger.setLevel(logging.INFO)
 # ¡IMPORTANTE! En producción, carga esto desde una variable de entorno por seguridad.
 # NO lo dejes harcodeado en el código fuente de tu repositorio público.
 MERCADO_PAGO_ACCESS_TOKEN = os.environ.get("MERCADO_PAGO_ACCESS_TOKEN")
-MERCADO_PAGO_PUBLIC_KEY = os.environ.get("MERCADO_PAGO_PUBLIC_KEY")
-
-# *** CAMBIO CRÍTICO AQUÍ: Eliminamos 'sandbox=False' ***
 sdk = mercadopago.SDK(MERCADO_PAGO_ACCESS_TOKEN)
 
-app.logger.info(f"DEBBUGING ACCESS TOKEN: {MERCADO_PAGO_ACCESS_TOKEN[:20]}...")
-app.logger.info(f"DEBUGGING PUBLIC KEY: {MERCADO_PAGO_PUBLIC_KEY[:20]}...")
+app.logger.info(f"DEBBUGING: {MERCADO_PAGO_ACCESS_TOKEN[:10]}")
 
+# MERCADO_PAGO_ACCESS_TOKEN = os.environ.get("MERCADO_PAGO_ACCESS_TOKEN", "TEST-7537326222958564-081218-6f78e1f990e1b269a602202189d4f203-1123457005")
 
-GOOGLE_FORMS_COMPETIDORES_ID = "1FAIpQLSeA0tbwyKZ-u8zra-W6hlJL8TCTQOayqCpKwya3sON0ubS0nA"
+GOOGLE_FORMS_COMPETIDORES_ID = "1FAIpQLSeA0tbwyKZ-u8zra-W6hlJL8TCTQOayqCpKwya3sON0ubS0nA" 
 GOOGLE_FORMS_ENTRY_ID_NUM_OPERACION = "entry.1161481877"
-GOOGLE_FORMS_ENTRY_ID_CLASE_BARCO = "entry.1553765108"
-GOOGLE_FORMS_ENTRENADORES_ID = "1FAIpQLSeZGar2xA3OR6SwNbKatSj1CLWQjRTmWyM0t-LOabpRWZYZ4g"
-URL_BASE = "https://metropolitanopagos-inscripciones.onrender.com"
+GOOGLE_FORMS_ENTRY_ID_CLASE_BARCO = "entry.1553765108" 
+GOOGLE_FORMS_ENTRENADORES_ID = "1FAIpQLSeZGar2xA3OR6SwNbKatSj1CLWQjRTmWyM0t-LOabpRWZYZ4g" 
+URL_BASE = "https://metropolitanopagos-inscripciones.onrender.com" 
 
 
 BASE_PRECIOS = {
@@ -56,7 +53,7 @@ PRECIOS_BENEFICIO = {
     'ILCA 6': 60000,
     'ILCA 4': 60000,
     '420': 100000,
-    '29er': 500
+    '29er': 100000
 }
 
 
@@ -72,13 +69,14 @@ def process_inscription():
     """
     Recibe los datos del formulario HTML.
     Si es entrenador, redirige directamente al Google Form de entrenadores.
-    Si es competidor, calcula el precio y redirige a la página de Checkout Bricks.
+    Si es competidor, calcula el precio y redirige a Mercado Pago.
     """
     rol = request.form.get('rol')
     mas_150km = request.form.get('mas_150km') == 'on'
     clase_barco = request.form.get('clase_barco') # Capturamos la clase_barco
 
     if rol == 'entrenador':
+        # Los entrenadores van directo a su formulario específico
         google_forms_url = (
             f"https://docs.google.com/forms/d/e/{GOOGLE_FORMS_ENTRENADORES_ID}/viewform?"
             f"usp=pp_url"
@@ -89,7 +87,7 @@ def process_inscription():
     elif rol == 'competidor':
         total_price = BASE_PRECIOS['competidor']
         item_title = "Inscripción Competidor"
-
+        
         if clase_barco and clase_barco in PRECIOS_BARCOS:
             total_price += PRECIOS_BARCOS[clase_barco]
             item_title += f" - {clase_barco}"
@@ -114,88 +112,49 @@ def process_inscription():
         # Codificar la clase_barco para URL
         encoded_clase_barco = urllib.parse.quote_plus(clase_barco)
 
-        payer_email = request.form.get('email') if rol == 'competidor' else None
-        payer_nombre = request.form.get('nombre') if rol == 'competidor' else None
-        payer_apellido = request.form.get('apellido') if rol == 'competidor' else None
-        payer_dni = request.form.get('dni') if rol == 'competidor' else None
-        app.logger.info(f"Email recibido en formulario: {payer_email}")
-        if rol == 'competidor' and (not payer_email or payer_email.strip() == ""):
-            app.logger.error("No se recibió un email válido para el competidor. No se puede crear la preferencia de pago.")
-            return "Error: Debes ingresar un email válido para continuar con el pago.", 400
-
-        payer_data = {"email": payer_email}
-        if payer_nombre:
-            payer_data["name"] = payer_nombre
-        if payer_apellido:
-            payer_data["surname"] = payer_apellido
-        if payer_dni:
-            payer_data["identification"] = {"type": "DNI", "number": payer_dni}
         preference_data = {
             "items": [
                 {
                     "title": item_title,
                     "quantity": 1,
                     "unit_price": float(total_price),
-                    "currency_id": "ARS"
+                    "currency_id": "ARS" 
                 }
             ],
             "back_urls": {
-                "success": f"{URL_BASE}/payment_success?clase_barco={encoded_clase_barco}",
+                # Añadir clase_barco como parámetro a las URLs de retorno
+                "success": f"{URL_BASE}/payment_success?clase_barco={encoded_clase_barco}", 
                 "pending": f"{URL_BASE}/payment_pending?clase_barco={encoded_clase_barco}",
                 "failure": f"{URL_BASE}/payment_failure?clase_barco={encoded_clase_barco}"
             },
-            "auto_return": "approved",
+            "auto_return": "approved", 
             "external_reference": f"METRO_{clase_barco or 'no_barco'}",
-            "payment_methods": {
+             "payment_methods": {
                 "excluded_payment_types": [
-                    {"id": "ticket"}
+                    {"id": "ticket"} # Excluye pagos en efectivo (ticket)
                 ]
-            },
-            "payer": payer_data
+            }
+
         }
 
         try:
             preference_response = sdk.preference().create(preference_data)
             preference = preference_response["response"]
-
-            if preference_response["status"] == 201:
-                app.logger.info(f"Preferencia creada exitosamente. ID: {preference['id']}")
-                app.logger.info(f"Detalles completos de la preferencia creada: {preference}")
-                return redirect(url_for('render_checkout_bricks',
-                                         preference_id=preference['id'],
-                                         clase_barco=encoded_clase_barco,
-                                         public_key=MERCADO_PAGO_PUBLIC_KEY,
-                                         transaction_amount=total_price
-                                         ))
+            
+            if preference_response["status"] == 201: 
+                init_point = preference["init_point"]
+                app.logger.info(f"Preferencia creada exitosamente. Redirigiendo a: {init_point}")
+                return redirect(init_point)
             else:
                 app.logger.error(f"Error al crear la preferencia de pago: {preference_response['status']} - {preference_response['response']}")
                 return "Hubo un error al procesar el pago. Por favor, inténtalo de nuevo más tarde."
-
+                
         except Exception as e:
             app.logger.error(f"Excepción al crear la preferencia de pago: {e}")
             return "Hubo un error inesperado al procesar tu solicitud de pago."
     else:
         return "Error: Rol no válido seleccionado.", 400
 
-# --- NUEVA RUTA PARA RENDERIZAR EL CHECKOUT BRICKS ---
-@app.route('/checkout_bricks')
-def render_checkout_bricks():
-    preference_id = request.args.get('preference_id')
-    clase_barco = request.args.get('clase_barco')
-    public_key = request.args.get('public_key')
-    transaction_amount = request.args.get('transaction_amount')
-
-    if not preference_id or not public_key or not transaction_amount:
-        app.logger.error("Faltan parámetros necesarios para renderizar el Checkout Bricks.")
-        return "Error: No se pudo cargar la página de pago. Faltan datos.", 400
-
-    return render_template('checkout_bricks.html',
-                           preference_id=preference_id,
-                           clase_barco=clase_barco,
-                           public_key=public_key,
-                           transaction_amount=transaction_amount,
-                           page_title="Completa tu pago"
-                           )
 @app.route('/payment_success')
 def payment_success():
     """
@@ -203,11 +162,11 @@ def payment_success():
     Aquí se captura el 'payment_id' y la 'clase_barco' y se usan para construir la URL del Google Forms.
     Luego, el template 'success.html' usará JavaScript para la redirección final.
     """
-    payment_id = request.args.get('payment_id')
-    status = request.args.get('status')
-    collection_id = request.args.get('collection_id')
+    payment_id = request.args.get('payment_id') 
+    status = request.args.get('status') 
+    collection_id = request.args.get('collection_id') 
     clase_barco = request.args.get('clase_barco')
-
+    
     app.logger.info(f"Redirección de éxito de MP recibida. Payment ID: {payment_id}, Status: {status}, Collection ID: {collection_id}, Clase Barco: {clase_barco}")
 
     # Construye la URL del Google Forms para competidores, inyectando el payment_id
@@ -215,16 +174,16 @@ def payment_success():
         f"https://docs.google.com/forms/d/e/{GOOGLE_FORMS_COMPETIDORES_ID}/viewform?"
         f"usp=pp_url&{GOOGLE_FORMS_ENTRY_ID_NUM_OPERACION}={payment_id}"
     )
-
+    
     # Si tenemos la clase de barco, la añadimos a la URL del Google Forms
     if clase_barco:
         # Codificar la clase_barco para URL antes de añadirla al Google Forms
         encoded_clase_barco_for_form = urllib.parse.quote_plus(clase_barco)
         google_forms_url_competidor += f"&{GOOGLE_FORMS_ENTRY_ID_CLASE_BARCO}={encoded_clase_barco_for_form}"
 
-    return render_template('success.html',
-                           message="¡Tu pago fue procesado con éxito! Por favor, verifica tu correo o continúa con los pasos adicionales.",
-                           payment_id=payment_id,
+    return render_template('success.html', 
+                           message="¡Tu pago fue procesado con éxito! Por favor, verifica tu correo o continúa con los pasos adicionales.", 
+                           payment_id=payment_id, 
                            google_forms_url=google_forms_url_competidor)
 
 @app.route('/payment_pending')
@@ -251,20 +210,20 @@ def mercadopago_webhook():
     Endpoint para recibir notificaciones de Webhook de Mercado Pago.
     ¡ESTO ES CRÍTICO PARA LA FIABILIDAD!
     """
-    data = request.json
-
+    data = request.json 
+    
     # Es crucial validar que la solicitud proviene de Mercado Pago.
     # Puedes verificar la firma o la IP de origen si necesitas mayor seguridad.
-
-    topic = data.get('topic')
-    resource_id = data.get('id')
+    
+    topic = data.get('topic') 
+    resource_id = data.get('id') 
 
     app.logger.info(f"Webhook recibido. Topic: {topic}, Resource ID: {resource_id}")
 
     if topic == 'payment':
         try:
             payment_info = sdk.payment().get(resource_id)
-
+            
             if payment_info and payment_info["status"] == 200:
                 payment = payment_info["response"]
                 payment_id = payment["id"]
@@ -290,76 +249,9 @@ def mercadopago_webhook():
 
         except Exception as e:
             app.logger.error(f"Excepción al procesar webhook de pago {resource_id}: {e}")
-
+    
     # Siempre devuelve un 200 OK a Mercado Pago para confirmar que recibiste la notificación
     return jsonify({"status": "ok"}), 200
-@app.route('/process_payment_with_brick', methods=['POST'])
-def process_payment_with_brick():
-    try:
-        payment_data = request.json
-        app.logger.info(f"Datos de pago recibidos del Brick: {payment_data}")
-
-        if 'payment_method_id' not in payment_data or not payment_data['payment_method_id']:
-            app.logger.error("payment_method_id no recibido o vacío en /process_payment_with_brick.")
-            return jsonify({"status": "error", "message": "Método de pago requerido (payment_method_id)."}), 400
-        if 'token' not in payment_data or not payment_data['token']:
-            app.logger.error("token no recibido o vacío en /process_payment_with_brick.")
-            return jsonify({"status": "error", "message": "Token de pago requerido (token)."}), 400
-
-        transaction_amount = float(payment_data.get('transaction_amount', 0.0))
-        if not transaction_amount:
-            app.logger.error("transaction_amount no recibido o es cero en /process_payment_with_brick.")
-            return jsonify({"status": "error", "message": "Monto de transacción requerido."}), 400
-
-        payer_email = payment_data.get('payer', {}).get('email')
-        if not payer_email:
-            app.logger.warning("Email del pagador no encontrado en los datos del Brick. Usando dummy para prueba.")
-            payer_email = "test_payer@example.com" # Considera cómo manejar esto en producción. En prod, el email es clave.
-
-        clase_barco_from_data = payment_data.get('clase_barco', 'no_barco_brick')
-
-
-        payment_create_data = {
-            "transaction_amount": transaction_amount,
-            "token": payment_data['token'],
-            "description": payment_data.get('description', f"Inscripción a evento {clase_barco_from_data}"),
-            "installments": int(payment_data['installments']),
-            "payment_method_id": payment_data['payment_method_id'],
-            "payer": {
-                "email": payer_email,
-                # Para producción, aquí es donde deberías enviar más datos del pagador
-                # como identification (DNI/CUIT), name, surname, address.
-                # Asegúrate de que tu frontend recolecta esta información y la envía.
-                # "identification": payment_data.get('payer', {}).get('identification', {})
-            },
-            "external_reference": payment_data.get('external_reference', f"METRO_BRICK_{clase_barco_from_data}"),
-            "notification_url": f"{URL_BASE}/mercadopago-webhook", # Asegúrate que este webhook es público y Mercado Pago puede alcanzarlo
-        }
-
-        app.logger.info(f"Enviando solicitud de pago a MP: {payment_create_data}")
-        payment_response = sdk.payment().create(payment_create_data)
-        payment = payment_response["response"]
-
-        if payment_response["status"] == 201 or payment_response["status"] == 200:
-            return jsonify({
-                "status": payment['status'],
-                "payment_id": payment['id'],
-                "message": "Pago procesado con éxito."
-            }), 201
-        else:
-            app.logger.error(f"Error al procesar el pago final: {payment_response['status']} - {payment_response.get('response', 'No response body')}")
-            return jsonify({
-                "status": "error",
-                "message": payment.get("message", "Error desconocido al procesar el pago."),
-                "payment_id": payment.get('id', 'N/A'),
-                "error_detail": payment.get('cause', [])
-            }), payment_response["status"]
-
-    except Exception as e:
-        app.logger.error(f"Excepción al procesar el pago desde el Brick: {e}", exc_info=True)
-        return jsonify({"status": "error", "message": "Error interno del servidor."}), 500
-    # *** LÍNEAS DUPLICADAS ELIMINADAS AQUÍ ***
-
 
 # --- INICIAR EL SERVIDOR FLASK ---
 if __name__ == '__main__':

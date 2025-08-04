@@ -38,6 +38,7 @@ BASE_PRECIOS = {
 PRECIOS_BARCOS = {
     'Optimist Principiantes': 70000,
     'Optimist Timoneles': 70000,
+    'Sudamericano - Optimist Timoneles': 40000,
     'ILCA 7': 40000,
     'ILCA 6': 70000,
     'ILCA 4': 70000,
@@ -49,6 +50,7 @@ PRECIOS_BARCOS = {
 PRECIOS_BENEFICIO = {
     'Optimist Principiantes': 60000,
     'Optimist Timoneles': 60000,
+    'Sudamericano - Optimist Timoneles': 40000,
     'ILCA 7': 35000,
     'ILCA 6': 60000,
     'ILCA 4': 60000,

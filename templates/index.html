@@ -42,7 +42,7 @@
                                         <option value="">Selecciona tu clase de barco</option>
                                         <option value="Optimist Principiantes">Optimist Principiantes</option>
                                         <option value="Optimist Timoneles">Optimist Timoneles</option>
-                                        <option value="Optimist Timoneles">Sudamericano - Optimist Timoneles</option>
+                                        <option value="Sudamericano - Optimist Timoneles">Sudamericano - Optimist Timoneles</option>
                                         <option value="ILCA 7">ILCA 7</option>
                                         <option value="ILCA 6">ILCA 6</option>
                                         <option value="ILCA 4">ILCA 4</option>
@@ -74,7 +74,7 @@
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-        
+
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 const rolEntrenador = document.getElementById('rolEntrenador');
@@ -102,28 +102,5 @@
                 // Inicializar al cargar la página
                 toggleCompetidorFields();
             });
-
-            document.getElementById('inscriptionForm').addEventListener('submit', async function(e) {
-                const rol = document.querySelector('input[name="rol"]:checked').value;
-                if (rol === 'competidor') {
-                    e.preventDefault();
-                    const clase_barco = document.getElementById('claseBarco').value;
-                    const mas_150km = document.getElementById('mas_150km').checked;
-                    // Llamar a /crear_preferencia
-                    const response = await fetch('/crear_preferencia', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ rol, clase_barco, mas_150km })
-                    });
-                    const data = await response.json();
-                    if (data.preference_id) {
-                        window.location.href = `/pagar_brick/${data.preference_id}`;
-                    } else {
-                        alert('Error al crear la preferencia de pago. Intenta nuevamente.');
-                    }
-                }
-                // Si es entrenador, submit normal
-            });
         </script>
     </body>
-    </html>

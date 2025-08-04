@@ -89,7 +89,7 @@ def process_inscription():
     elif rol == 'competidor':
         total_price = BASE_PRECIOS['competidor']
         item_title = "Inscripción Competidor"
-        
+
         if clase_barco and clase_barco in PRECIOS_BARCOS:
             total_price += PRECIOS_BARCOS[clase_barco]
             item_title += f" - {clase_barco}"
@@ -142,7 +142,7 @@ def process_inscription():
         try:
             preference_response = sdk.preference().create(preference_data)
             preference = preference_response["response"]
-            
+
             if preference_response["status"] == 201: 
                 init_point = preference["init_point"]
                 app.logger.info(f"Preferencia creada exitosamente. Redirigiendo a: {init_point}")
@@ -150,59 +150,12 @@ def process_inscription():
             else:
                 app.logger.error(f"Error al crear la preferencia de pago: {preference_response['status']} - {preference_response['response']}")
                 return "Hubo un error al procesar el pago. Por favor, inténtalo de nuevo más tarde."
-                
+
         except Exception as e:
             app.logger.error(f"Excepción al crear la preferencia de pago: {e}")
             return "Hubo un error inesperado al procesar tu solicitud de pago."
     else:
         return "Error: Rol no válido seleccionado.", 400
-
-@app.route('/crear_preferencia', methods=['POST'])
-def crear_preferencia():
-    data = request.get_json()
-    rol = data.get('rol')
-    mas_150km = data.get('mas_150km')
-    clase_barco = data.get('clase_barco')
-
-    if rol != 'competidor':
-        return jsonify({'error': 'Solo se puede crear preferencia para competidor'}), 400
-
-    total_price = BASE_PRECIOS['competidor']
-    if clase_barco in PRECIOS_BARCOS:
-        total_price += PRECIOS_BARCOS[clase_barco]
-    if mas_150km:
-        if clase_barco in PRECIOS_BENEFICIO:
-            total_price = PRECIOS_BENEFICIO[clase_barco]
-
-    item_title = f"Inscripción Competidor {clase_barco}"
-    preference_data = {
-        "items": [
-            {
-                "title": item_title,
-                "quantity": 1,
-                "unit_price": float(total_price),
-                "currency_id": "ARS"
-            }
-        ],
-        "external_reference": f"METRO_{clase_barco or 'no_barco'}",
-        "payment_methods": {
-            "excluded_payment_types": [
-                {"id": "ticket"}
-            ]
-        }
-    }
-    try:
-        preference_response = sdk.preference().create(preference_data)
-        preference_id = preference_response["response"]["id"]
-        return jsonify({"preference_id": preference_id})
-    except Exception as e:
-        app.logger.error(f"Error creando preferencia para Bricks: {e}")
-        return jsonify({"error": "No se pudo crear la preferencia"}), 500
-
-@app.route('/pagar_brick/<preference_id>')
-def pagar_brick(preference_id):
-    public_key = os.environ.get("MERCADO_PAGO_PUBLIC_KEY")
-    return render_template('payment_brick.html', preference_id=preference_id, public_key=public_key)
 
 @app.route('/payment_success')
 def payment_success():
@@ -215,7 +168,7 @@ def payment_success():
     status = request.args.get('status') 
     collection_id = request.args.get('collection_id') 
     clase_barco = request.args.get('clase_barco')
-    
+
     app.logger.info(f"Redirección de éxito de MP recibida. Payment ID: {payment_id}, Status: {status}, Collection ID: {collection_id}, Clase Barco: {clase_barco}")
 
     # Construye la URL del Google Forms para competidores, inyectando el payment_id
@@ -223,7 +176,7 @@ def payment_success():
         f"https://docs.google.com/forms/d/e/{GOOGLE_FORMS_COMPETIDORES_ID}/viewform?"
         f"usp=pp_url&{GOOGLE_FORMS_ENTRY_ID_NUM_OPERACION}={payment_id}"
     )
-    
+
     # Si tenemos la clase de barco, la añadimos a la URL del Google Forms
     if clase_barco:
         # Codificar la clase_barco para URL antes de añadirla al Google Forms
@@ -260,10 +213,10 @@ def mercadopago_webhook():
     ¡ESTO ES CRÍTICO PARA LA FIABILIDAD!
     """
     data = request.json 
-    
+
     # Es crucial validar que la solicitud proviene de Mercado Pago.
     # Puedes verificar la firma o la IP de origen si necesitas mayor seguridad.
-    
+
     topic = data.get('topic') 
     resource_id = data.get('id') 
 
@@ -272,7 +225,7 @@ def mercadopago_webhook():
     if topic == 'payment':
         try:
             payment_info = sdk.payment().get(resource_id)
-            
+
             if payment_info and payment_info["status"] == 200:
                 payment = payment_info["response"]
                 payment_id = payment["id"]
@@ -298,11 +251,10 @@ def mercadopago_webhook():
 
         except Exception as e:
             app.logger.error(f"Excepción al procesar webhook de pago {resource_id}: {e}")
-    
+
     # Siempre devuelve un 200 OK a Mercado Pago para confirmar que recibiste la notificación
     return jsonify({"status": "ok"}), 200
 
 # --- INICIAR EL SERVIDOR FLASK ---
 if __name__ == '__main__':
-    # Para producción, desactiva debug=True y usa un servidor WSGI como Gunicorn
-    app.run(debug=False, port=5000)
+app.run(debug=False, port=5000)

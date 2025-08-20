@@ -87,6 +87,12 @@ def process_inscription():
         return redirect(google_forms_url)
 
     elif rol == 'competidor':
+        # --- VALIDACIÓN: RESTRINGIR INSCRIPCIONES A CLASES CERRADAS ---
+        clases_habilitadas = ['ILCA 7']
+        if clase_barco not in clases_habilitadas:
+            app.logger.warning(f"Intento de inscripción a clase cerrada: {clase_barco}")
+            return "La inscripción para esta clase está cerrada. Por favor, selecciona una clase habilitada.", 403
+        
         total_price = BASE_PRECIOS['competidor']
         item_title = "Inscripción Competidor"
 

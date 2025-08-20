@@ -38,7 +38,7 @@
                             <div id="competidorFields" style="display: none;">
                                 <div id="claseBarcoGroup" class="mb-2">
                                     <label for="claseBarco" class="form-label">Clase de Barco:</label>
-                                    <!-- <select class="form-select" id="claseBarco" name="clase_barco">
+                                    <select class="form-select" id="claseBarco" name="clase_barco">
                                         <option value="">Selecciona tu clase de barco</option>
                                         <option value="Optimist Principiantes">Optimist Principiantes</option>
                                         <option value="Optimist Timoneles">Optimist Timoneles</option>
@@ -48,18 +48,7 @@
                                         <option value="ILCA 4">ILCA 4</option>
                                         <option value="420">420</option>
                                         <option value="29er">29er</option>
-                                    </select>-->
-                                    <p></p>
-                                    <select class="form-select" id="claseBarco" name="clase_barco">
-                                        <option value="">Selecciona tu clase de barco</option>
-                                        <p>Optimist Principiantes</p>
-                                        <p>Optimist Timoneles</p>
-                                        <p>Sudamericano - Optimist Timoneles</p>
-                                        <p>ILCA 6</p>
-                                        <p>ILCA 4</p>
-                                        <p>420</p>
-                                        <p>29er</p>
-                                        <option value="ILCA 7">ILCA 7</option></select>
+                                    </select>
                                 </div>
 
                                 <div class="mb-4 form-check">
@@ -88,30 +77,58 @@
 
         <script>
             document.addEventListener('DOMContentLoaded', function() {
+                const inscriptionForm = document.getElementById('inscriptionForm');
                 const rolEntrenador = document.getElementById('rolEntrenador');
                 const rolCompetidor = document.getElementById('rolCompetidor');
-                const competidorFields = document.getElementById('competidorFields'); // Nuevo contenedor
+                const competidorFields = document.getElementById('competidorFields'); 
                 const claseBarcoSelect = document.getElementById('claseBarco');
-                const mas150kmCheckbox = document.getElementById('mas_150km'); // El checkbox de distancia
-
+                const mas150kmCheckbox = document.getElementById('mas_150km'); 
+        
                 function toggleCompetidorFields() {
                     if (rolCompetidor.checked) {
-                        competidorFields.style.display = 'block'; // Mostrar todos los campos de competidor
+                        competidorFields.style.display = 'block'; 
                         claseBarcoSelect.setAttribute('required', 'required'); 
                     } else {
-                        competidorFields.style.display = 'none'; // Ocultar todos los campos de competidor
-                        claseBarcoSelect.removeAttribute('required'); // No obligatorio
-                        claseBarcoSelect.value = ''; // Limpiar selección
-                        mas150kmCheckbox.checked = false; // Desmarcar el checkbox
+                        competidorFields.style.display = 'none'; 
+                        claseBarcoSelect.removeAttribute('required'); 
+                        claseBarcoSelect.value = ''; 
+                        mas150kmCheckbox.checked = false; 
                     }
                 }
-
+        
                 // Escuchar cambios en los radio buttons de rol
                 rolEntrenador.addEventListener('change', toggleCompetidorFields);
                 rolCompetidor.addEventListener('change', toggleCompetidorFields);
-
+        
                 // Inicializar al cargar la página
                 toggleCompetidorFields();
+        
+                // --- INICIO: NUEVA LÓGICA DE VALIDACIÓN ---
+        
+                // Clases de barco con inscripción habilitada
+                const clasesHabilitadas = ['ILCA 7']; 
+        
+                // Escucha el evento de cambio en el menú desplegable de barcos
+                claseBarcoSelect.addEventListener('change', function() {
+                    const selectedClass = claseBarcoSelect.value;
+                    // Si el rol es 'competidor' y la clase no está en la lista de habilitadas...
+                    if (rolCompetidor.checked && selectedClass !== '' && !clasesHabilitadas.includes(selectedClass)) {
+                        alert('La inscripción para esta clase está cerrada.');
+                        claseBarcoSelect.value = ''; // Resetea la selección
+                    }
+                });
+        
+                // Escucha el evento de envío del formulario para prevenir la redirección
+                inscriptionForm.addEventListener('submit', function(event) {
+                    const selectedClass = claseBarcoSelect.value;
+                    // Si el rol es 'competidor' y la clase no está habilitada, cancela el envío
+                    if (rolCompetidor.checked && !clasesHabilitadas.includes(selectedClass)) {
+                        event.preventDefault(); 
+                        alert('La inscripción para esta clase está cerrada. Por favor, selecciona una clase habilitada.');
+                    }
+                });
+                
+                // --- FIN: NUEVA LÓGICA DE VALIDACIÓN ---
             });
         </script>
     </body>

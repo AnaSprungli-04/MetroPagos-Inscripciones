@@ -7,6 +7,10 @@ body {
     font-family: arial, 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif; 
 }
 
+.disabled-option {
+    color: grey;
+}
+
 /* Estilos para el contenedor principal */
 .container {
     max-width: 90vw; 

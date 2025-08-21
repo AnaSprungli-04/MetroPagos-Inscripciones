@@ -36,26 +36,26 @@ BASE_PRECIOS = {
 }
 
 PRECIOS_BARCOS = {
-    #'Optimist Principiantes': 70000,
-    #'Optimist Timoneles': 70000,
-    #'Sudamericano - Optimist Timoneles': 40000,
+    'Optimist Principiantes': 70000,
+    'Optimist Timoneles': 70000,
+    'Sudamericano - Optimist Timoneles': 40000,
     'ILCA 7': 40000
-    #'ILCA 6': 70000,
-    #'ILCA 4': 70000,
-    #'420': 120000,
-    #'29er': 120000
+    'ILCA 6': 70000,
+    'ILCA 4': 70000,
+    '420': 120000,
+    '29er': 120000
 }
 
 # --- NUEVOS PRECIOS DE BENEFICIO FIJO POR CLASE DE BARCO ---
 PRECIOS_BENEFICIO = {
-   # 'Optimist Principiantes': 60000,
-    #'Optimist Timoneles': 60000,
-    #'Sudamericano - Optimist Timoneles': 40000,
-    'ILCA 7': 35000,
-    #'ILCA 6': 60000,
-    #'ILCA 4': 60000,
-    #'420': 100000,
-    #'29er': 100000
+   'Optimist Principiantes': 60000,
+   'Optimist Timoneles': 60000,
+   'Sudamericano - Optimist Timoneles': 40000,
+   'ILCA 7': 35000,
+   'ILCA 6': 60000,
+   'ILCA 4': 60000,
+   '420': 100000,
+   '29er': 100000
 }
 
 
@@ -88,7 +88,7 @@ def process_inscription():
 
     elif rol == 'competidor':
         # --- VALIDACIÓN: RESTRINGIR INSCRIPCIONES A CLASES CERRADAS ---
-        clases_habilitadas = ['ILCA 7']
+        clases_habilitadas = ['ILCA 7', '420', '29er']
         if clase_barco not in clases_habilitadas:
             app.logger.warning(f"Intento de inscripción a clase cerrada: {clase_barco}")
             return "La inscripción para esta clase está cerrada. Por favor, selecciona una clase habilitada.", 403

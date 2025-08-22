@@ -46,8 +46,8 @@
                                         <option value="ILCA 7">ILCA 7</option>
                                         <option value="ILCA 6" class="disabled-option"><s> ILCA 6</s> - clase cerrada</option>
                                         <option value="ILCA 4" class="disabled-option"><s>ILCA 4</s> - clase cerrada</option>
-                                        <option value="420" class="">420</option>
-                                        <option value="29er" class="">29er</option>
+                                        <option value="420" class="disabled-option">420</option>
+                                        <option value="29er" class="disabled-option">29er</option>
                                         <option value="Snipe" class="">Snipe</option>
                                     </select>
                                 </div>
@@ -107,7 +107,7 @@
                 // --- INICIO: NUEVA LÓGICA DE VALIDACIÓN ---
         
                 // Clases de barco con inscripción habilitada
-                const clasesHabilitadas = ['ILCA 7', '420', '29er','Snipe']; 
+                const clasesHabilitadas = ['ILCA 7','Snipe']; 
         
                 // Escucha el evento de cambio en el menú desplegable de barcos
                 claseBarcoSelect.addEventListener('change', function() {

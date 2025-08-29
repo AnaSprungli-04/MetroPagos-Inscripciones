@@ -65,8 +65,8 @@ PRECIOS_BENEFICIO = {
 
 @app.route('/')
 def index():
-    """Renderiza la página principal con el formulario de inscripción."""
-    return render_template('index.html', page_title="Inscripción al Evento")
+    """Renderiza la página principal con el aviso de inscripción cerrada."""
+    return render_template('cerrada.html')
 
 @app.route('/process_inscription', methods=['POST'])
 def process_inscription():

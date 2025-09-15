@@ -132,11 +132,11 @@ def process_inscription():
         # --- VALIDACIÃ“N: RESTRINGIR INSCRIPCIONES A CLASES CERRADAS ---
         clases_habilitadas = [c["name"] for c in settings.get("classes", []) if not c.get("closed", False)]
         if clase_barco not in clases_habilitadas:
-            app.logger.warning(f"Intento de inscripciÃ³n a clase cerrada: {clase_barco}")
-            return "La inscripciÃ³n para esta clase estÃ¡ cerrada. Por favor, selecciona una clase habilitada.", 403
+            app.logger.warning(f"Intento de inscripcion a clase cerrada: {clase_barco}")
+            return "La inscripcion para esta clase esta¡ cerrada. Por favor, selecciona una clase habilitada.", 403
         
         total_price = 0
-        item_title = "InscripciÃ³n Competidor"
+        item_title = "Inscripcion Competidor"
 
         if clase_barco:
             # Precio por clase desde settings, fallback a tabla fija
@@ -163,7 +163,7 @@ def process_inscription():
                 item_title += " (Beneficio >150km)"
                 app.logger.info(f"Aplicando beneficio fijo de {PRECIOS_BENEFICIO[clase_barco]} para {clase_barco}.")
             else:
-                app.logger.warning(f"Clase de barco '{clase_barco}' no tiene un beneficio fijo definido, no se aplicarÃ¡ descuento por distancia.")
+                app.logger.warning(f"Clase de barco '{clase_barco}' no tiene un beneficio fijo definido, no se aplicara¡ descuento por distancia.")
         # --- FIN LÃ“GICA PARA EL BENEFICIO FIJO ---
 
 

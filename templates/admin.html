@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Configuración</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    .admin-card { max-width: 900px; margin: 0 auto; }
+    .class-item { display: flex; align-items: center; gap: .5rem; }
+    .class-item input[type="text"] { flex: 1; }
+  </style>
+</head>
+<body>
+  <div class="container my-4">
+    <div class="card admin-card shadow p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0">Panel de Administración</h1>
+        <form method="POST" action="{{ url_for('admin_logout') }}">
+          <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-box-arrow-right"></i> Salir</button>
+        </form>
+      </div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+      {% endwith %}
+      <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin_save') }}">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Logo actual</label>
+              <div class="border rounded p-2 text-center">
+                <img src="/{{ settings.logo }}" alt="Logo" style="max-height: 100px;">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="logo" class="form-label">Subir nuevo logo</label>
+              <input class="form-control" type="file" id="logo" name="logo" accept="image/*">
+            </div>
+            <div class="row">
+              <div class="col-6 mb-3">
+                <label class="form-label">Título (izquierda)</label>
+                <input class="form-control" type="text" name="title_main" value="{{ settings.title_main }}">
+              </div>
+              <div class="col-6 mb-3">
+                <label class="form-label">Título destacado (negrita)</label>
+                <input class="form-control" type="text" name="title_strong" value="{{ settings.title_strong }}">
+              </div>
+            </div>
+            <!-- Precio base retirado: el precio es por clase -->
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Clases disponibles</label>
+            <div class="border rounded p-3">
+              {% for cls in settings.classes %}
+                <div class="class-item mb-2">
+                  <input class="form-check-input" type="checkbox" id="closed-{{ loop.index0 }}" name="closed-{{ loop.index0 }}" {% if cls.closed %}checked{% endif %}>
+                  <label class="form-check-label me-2" for="closed-{{ loop.index0 }}">Cerrada</label>
+                  <input class="form-control" type="text" name="name-{{ loop.index0 }}" value="{{ cls.name }}" placeholder="Nombre de la clase">
+                  <input class="form-control" style="max-width: 140px" type="number" min="0" step="1" name="price-{{ loop.index0 }}" value="{{ cls.price or '' }}" placeholder="Precio">
+                </div>
+              {% endfor %}
+              <hr>
+              <div class="class-item">
+                <input class="form-check-input" type="checkbox" id="new_class_closed" name="new_class_closed">
+                <label class="form-check-label me-2" for="new_class_closed">Cerrada</label>
+                <input class="form-control" type="text" name="new_class" placeholder="Agregar nueva clase">
+                <input class="form-control" style="max-width: 140px" type="number" min="0" step="1" name="new_class_price" placeholder="Precio">
+              </div>
+              <div class="form-text">Marcar "Cerrada" hará que aparezca deshabilitada y en gris con "- clase cerrada". El precio de inscripción se toma por clase.</div>
+            </div>
+          </div>
+        </div>
+        <div class="text-center mt-4">
+          <button class="btn btn-primary" type="submit"><i class="bi bi-save me-1"></i> Guardar cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

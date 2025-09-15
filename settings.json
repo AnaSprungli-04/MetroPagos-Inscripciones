@@ -1,0 +1,17 @@
+{
+  "logo": "static/images/Metropolitano.png",
+  "title_main": "Inscripciones",
+  "title_strong": "Metropolitano",
+  "base_price": 0,
+  "classes": [
+    {"name": "Optimist Principiantes", "closed": true, "price": 70000},
+    {"name": "Optimist Timoneles", "closed": true, "price": 70000},
+    {"name": "Sudamericano - Optimist Timoneles", "closed": true, "price": 40000},
+    {"name": "ILCA 7", "closed": false, "price": 40000},
+    {"name": "ILCA 6", "closed": true, "price": 70000},
+    {"name": "ILCA 4", "closed": true, "price": 70000},
+    {"name": "420", "closed": true, "price": 120000},
+    {"name": "29er", "closed": true, "price": 120000},
+    {"name": "Snipe", "closed": false, "price": 70000}
+  ]
+}

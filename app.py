@@ -324,10 +324,22 @@ def redirect_root_to_inscripciones():
     except Exception:
         pass
 
+@app.before_request
+def site_closed_gate():
+    try:
+        if request.method == 'GET' and not request.path.startswith('/admin') and not request.path.startswith('/static'):
+            settings = load_settings()
+            if settings.get('site_closed'):
+                return render_template('cerrada.html', page_title="Inscripción cerrada")
+    except Exception:
+        pass
+
 @app.route('/inscripciones')
 def inscripciones():
     """Renderiza la pÃ¡gina de inscripciones con datos de settings.json."""
     settings = load_settings()
+    if settings.get("site_closed"):
+        return render_template('cerrada.html', page_title="Inscripción cerrada")
     logo_path = settings.get("logo", "static/images/Metropolitano.png")
     title_main = settings.get("title_main", "Inscripciones")
     title_strong = settings.get("title_strong", "Metropolitano")

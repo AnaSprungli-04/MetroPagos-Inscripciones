@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 load_dotenv() # Carga las variables del archivo .env
 # ... el resto de tu cÃ³digo
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
 
 # ConfiguraciÃ³n del logger para ver los mensajes en la consola
 app.logger.setLevel(logging.INFO)

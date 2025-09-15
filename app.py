@@ -1,8 +1,11 @@
 ﻿from flask import Flask, render_template, request, redirect, url_for, jsonify
 import mercadopago
+from flask import session, flash
 import os
 import logging
 import urllib.parse # Importar para codificar URLs
+import json
+from werkzeug.utils import secure_filename
 
 from dotenv import load_dotenv
 
@@ -13,6 +16,34 @@ app = Flask(__name__)
 # ConfiguraciÃ³n del logger para ver los mensajes en la consola
 app.logger.setLevel(logging.INFO)
 
+SETTINGS_PATH = os.path.join(os.path.dirname(__file__), 'settings.json')
+ALLOWED_LOGO_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+
+
+def load_settings():
+    try:
+        with open(SETTINGS_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return {
+            "logo": "static/images/Metropolitano.png",
+            "title_main": "Inscripciones",
+            "title_strong": "Metropolitano",
+            "base_price": 0,
+            "classes": [
+                {"name": "ILCA 7", "closed": False, "price": 40000},
+                {"name": "Snipe", "closed": False, "price": 70000}
+            ]
+        }
+
+
+def save_settings(data):
+    with open(SETTINGS_PATH, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def allowed_logo(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_LOGO_EXTENSIONS
  
 
 # --- CONFIGURACIÃ“N DE MERCADO PAGO ---

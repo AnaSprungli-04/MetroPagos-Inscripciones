@@ -383,6 +383,22 @@ def admin_save():
 
     settings = load_settings()
 
+    # --- Eliminar clase si se solicitó ---
+    delete_idx = request.form.get('delete')
+    if delete_idx is not None:
+        try:
+            di = int(delete_idx)
+            classes = settings.get('classes', [])
+            if 0 <= di < len(classes):
+                classes.pop(di)
+                settings['classes'] = classes
+                save_settings(settings)
+                flash('Clase eliminada', 'success')
+                return redirect(url_for('admin_home'))
+        except Exception:
+            flash('No se pudo eliminar la clase', 'danger')
+            return redirect(url_for('admin_home'))
+
     # --- Actualizar títulos ---
     settings['title_main'] = request.form.get('title_main', settings.get('title_main', 'Inscripciones')).strip()
     settings['title_strong'] = request.form.get('title_strong', settings.get('title_strong', 'Metropolitano')).strip()
@@ -436,7 +452,6 @@ def admin_save():
     flash('Cambios guardados', 'success')
     return redirect(url_for('admin_home'))
 
-
 @app.route('/admin/site_state', methods=['POST'])
 def admin_site_state():
     if not session.get('is_admin'):
@@ -458,4 +473,3 @@ def admin_site_state():
 # --- INICIAR EL SERVIDOR FLASK ---
 if __name__ == '__main__': 
     app.run(debug=False, port=5000)
-

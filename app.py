@@ -1,49 +1,19 @@
-﻿from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
+﻿from flask import Flask, render_template, request, redirect, url_for, jsonify
 import mercadopago
 import os
 import logging
 import urllib.parse # Importar para codificar URLs
-import json
-from werkzeug.utils import secure_filename
 
 from dotenv import load_dotenv
 
 load_dotenv() # Carga las variables del archivo .env
 # ... el resto de tu cÃ³digo
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
 
 # ConfiguraciÃ³n del logger para ver los mensajes en la consola
 app.logger.setLevel(logging.INFO)
 
-SETTINGS_PATH = os.path.join(os.path.dirname(__file__), 'settings.json')
-ALLOWED_LOGO_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
-
-
-def load_settings():
-    try:
-        with open(SETTINGS_PATH, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except Exception:
-        return {
-            "logo": "static/images/Metropolitano.png",
-            "title_main": "Inscripciones",
-            "title_strong": "Metropolitano",
-            "base_price": 0,
-            "classes": [
-                {"name": "ILCA 7", "closed": False, "price": 40000},
-                {"name": "Snipe", "closed": False, "price": 70000}
-            ]
-        }
-
-
-def save_settings(data):
-    with open(SETTINGS_PATH, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-
-def allowed_logo(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_LOGO_EXTENSIONS
+ 
 
 # --- CONFIGURACIÃ“N DE MERCADO PAGO ---
 # Â¡IMPORTANTE! En producciÃ³n, carga esto desde una variable de entorno por seguridad.
@@ -344,7 +314,7 @@ def admin_home():
     if not session.get('is_admin'):
         return render_template('admin_login.html')
     settings = load_settings()
-        return render_template('admin.html', settings=settings)
+    return render_template('admin.html', settings=settings)
 
 
 @app.route('/admin/login', methods=['POST'])
@@ -429,3 +399,4 @@ def admin_save():
 # --- INICIAR EL SERVIDOR FLASK ---
 if __name__ == '__main__': 
     app.run(debug=False, port=5000)
+

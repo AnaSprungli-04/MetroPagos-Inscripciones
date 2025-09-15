@@ -350,22 +350,17 @@ def inscripciones():
         enabled_classes=enabled_classes
     )
 # --- ADMIN ---
-
+# --- ADMIN ---
 @app.route('/admin', methods=['GET'])
 def admin_home():
     if not session.get('is_admin'):
         return render_template('admin_login.html')
-
     settings = load_settings()
-    # ⚠️ No devolver cerrada.html aquí
     return render_template('admin.html', settings=settings)
 
 
 @app.route('/admin/login', methods=['POST'])
 def admin_login():
-    """
-    Valida la contraseña y crea la sesión de admin.
-    """
     password = request.form.get('password', '')
     expected = os.environ.get('ADMIN_PASSWORD')
     if expected and password == expected:
@@ -374,32 +369,92 @@ def admin_login():
     flash('Contraseña incorrecta', 'danger')
     return redirect(url_for('admin_home'))
 
+
 @app.route('/admin/logout', methods=['POST'])
 def admin_logout():
-    """
-    Cierra sesión de administrador.
-    """
     session.clear()
     return redirect(url_for('admin_home'))
 
-@app.route('/admin/site_state', methods=['POST'])
-def admin_site_state():
-    """
-    Cambia el estado global de inscripciones (abrir/cerrar).
-    ✅ Actualiza settings.json y regresa al panel admin.
-    """
+
+@app.route('/admin/save', methods=['POST'])
+def admin_save():
     if not session.get('is_admin'):
         return redirect(url_for('admin_home'))
+
+    settings = load_settings()
+
+    # --- Actualizar títulos ---
+    settings['title_main'] = request.form.get('title_main', settings.get('title_main', 'Inscripciones')).strip()
+    settings['title_strong'] = request.form.get('title_strong', settings.get('title_strong', 'Metropolitano')).strip()
+
+    # --- Actualizar clases existentes ---
+    updated_classes = []
+    for idx, cls in enumerate(settings.get('classes', [])):
+        open_checked = request.form.get(f'open-{idx}') == 'on'
+        closed = not open_checked
+        name = request.form.get(f'name-{idx}', cls.get('name')).strip()
+        price_val = request.form.get(f'price-{idx}')
+        try:
+            price = int(price_val) if price_val else cls.get('price')
+        except Exception:
+            price = cls.get('price')
+        if name:
+            updated_classes.append({"name": name, "closed": closed, "price": price})
+
+    # --- Agregar nueva clase ---
+    new_class = request.form.get('new_class', '').strip()
+    if new_class:
+        names_lower = {c['name'].lower() for c in updated_classes}
+        if new_class.lower() not in names_lower:
+            new_open = request.form.get('new_class_open') == 'on'
+            new_closed = not new_open
+            new_price_val = request.form.get('new_class_price')
+            try:
+                new_price = int(new_price_val) if new_price_val else None
+            except Exception:
+                new_price = None
+            updated_classes.append({"name": new_class, "closed": new_closed, "price": new_price})
+
+    settings['classes'] = updated_classes
+
+    # --- Guardar logo nuevo ---
+    if 'logo' in request.files:
+        file = request.files['logo']
+        if file and file.filename:
+            filename = secure_filename(file.filename)
+            ext_ok = "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_LOGO_EXTENSIONS
+            if ext_ok:
+                dest_dir = os.path.join(os.path.dirname(__file__), 'static', 'images')
+                os.makedirs(dest_dir, exist_ok=True)
+                save_name = f"logo_{filename}"
+                file.save(os.path.join(dest_dir, save_name))
+                settings['logo'] = f"static/images/{save_name}"
+            else:
+                flash('Formato de imagen no permitido', 'warning')
+
+    save_settings(settings)
+    flash('Cambios guardados', 'success')
+    return redirect(url_for('admin_home'))
+
+
+@app.route('/admin/site_state', methods=['POST'])
+def admin_site_state():
+    if not session.get('is_admin'):
+        return redirect(url_for('admin_home'))
+
     action = request.form.get('action')
     settings = load_settings()
+
     if action == 'close':
         settings['site_closed'] = True
         flash('Inscripciones cerradas', 'warning')
     elif action == 'open':
         settings['site_closed'] = False
         flash('Inscripciones abiertas', 'success')
+
     save_settings(settings)
     return redirect(url_for('admin_home'))
+
 
     # Textos
     settings['title_main'] = request.form.get('title_main', settings.get('title_main', 'Inscripciones')).strip()

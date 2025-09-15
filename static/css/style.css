@@ -101,3 +101,8 @@ h1, label {
     display: flex;
     justify-content: center;
 }
+
+
+.admin-card { max-width: 1000px; margin: 0 auto; }
+.class-item { display: flex; align-items: center; gap: .5rem; }
+.class-item input[type="text"] { flex: 1; }

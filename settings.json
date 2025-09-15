@@ -3,6 +3,7 @@
   "title_main": "Inscripciones",
   "title_strong": "Metropolitano",
   "base_price": 0,
+  "site_closed": false,
   "classes": [
     {"name": "Optimist Principiantes", "closed": true, "price": 70000},
     {"name": "Optimist Timoneles", "closed": true, "price": 70000},

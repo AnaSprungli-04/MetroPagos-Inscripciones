@@ -31,6 +31,7 @@ def load_settings():
             "title_main": "Inscripciones",
             "title_strong": "Metropolitano",
             "base_price": 0,
+            "site_closed": False,
             "classes": [
                 {"name": "ILCA 7", "closed": False, "price": 40000},
                 {"name": "Snipe", "closed": False, "price": 70000}
@@ -110,6 +111,11 @@ def process_inscription():
     Si es competidor, calcula el precio y redirige a Mercado Pago.
     """
     rol = request.form.get('rol')
+    settings = load_settings()
+
+    # Bloqueo global de inscripciones
+    if settings.get("site_closed"):
+        return render_template('cerrada.html', page_title="Inscripción cerrada"), 403
     mas_150km = request.form.get('mas_150km') == 'on'
     clase_barco = request.form.get('clase_barco') # Capturamos la clase_barco
 
@@ -124,7 +130,6 @@ def process_inscription():
 
     elif rol == 'competidor':
         # --- VALIDACIÃ“N: RESTRINGIR INSCRIPCIONES A CLASES CERRADAS ---
-        settings = load_settings()
         clases_habilitadas = [c["name"] for c in settings.get("classes", []) if not c.get("closed", False)]
         if clase_barco not in clases_habilitadas:
             app.logger.warning(f"Intento de inscripciÃ³n a clase cerrada: {clase_barco}")
@@ -346,6 +351,8 @@ def admin_home():
     if not session.get('is_admin'):
         return render_template('admin_login.html')
     settings = load_settings()
+    if settings.get("site_closed"):
+        return render_template('cerrada.html', page_title="Inscripción cerrada")
     return render_template('admin.html', settings=settings)
 
 
@@ -373,6 +380,22 @@ def admin_save():
 
     settings = load_settings()
 
+    # Eliminar clase por índice si se solicitó
+    delete_idx = request.form.get('delete')
+    if delete_idx is not None:
+        try:
+            di = int(delete_idx)
+            classes = settings.get('classes', [])
+            if 0 <= di < len(classes):
+                classes.pop(di)
+                settings['classes'] = classes
+                save_settings(settings)
+                flash('Clase eliminada', 'success')
+                return redirect(url_for('admin_home'))
+        except Exception:
+            flash('No se pudo eliminar la clase', 'danger')
+            return redirect(url_for('admin_home'))
+
     # Textos
     settings['title_main'] = request.form.get('title_main', settings.get('title_main', 'Inscripciones')).strip()
     settings['title_strong'] = request.form.get('title_strong', settings.get('title_strong', 'Metropolitano')).strip()
@@ -383,7 +406,12 @@ def admin_save():
     classes = settings.get('classes', [])
     updated_classes = []
     for idx, cls in enumerate(classes):
-        closed = request.form.get(f'closed-{idx}') == 'on'
+        # Invertimos lógica: check = Abierta
+        open_checked = request.form.get(f'open-{idx}') == 'on'
+        # Backcompat si viniera el campo anterior
+        if request.form.get(f'closed-{idx}') is not None:
+            open_checked = not (request.form.get(f'closed-{idx}') == 'on')
+        closed = not open_checked
         name = request.form.get(f'name-{idx}', cls.get('name')).strip()
         price_val = request.form.get(f'price-{idx}')
         try:
@@ -398,7 +426,12 @@ def admin_save():
     if new_class:
         names_lower = {c['name'].lower() for c in updated_classes}
         if new_class.lower() not in names_lower:
-            new_closed = request.form.get('new_class_closed') == 'on'
+            # Abierta marcadas => closed = False
+            new_open = request.form.get('new_class_open') == 'on'
+            # Backcompat si llega el viejo campo
+            if request.form.get('new_class_closed') is not None:
+                new_open = not (request.form.get('new_class_closed') == 'on')
+            new_closed = not new_open
             new_price_val = request.form.get('new_class_price')
             try:
                 new_price = int(new_price_val) if new_price_val not in (None, "") else None
@@ -426,6 +459,22 @@ def admin_save():
 
     save_settings(settings)
     flash('Cambios guardados', 'success')
+    return redirect(url_for('admin_home'))
+
+
+@app.route('/admin/site_state', methods=['POST'])
+def admin_site_state():
+    if not session.get('is_admin'):
+        return redirect(url_for('admin_home'))
+    action = request.form.get('action')
+    settings = load_settings()
+    if action == 'close':
+        settings['site_closed'] = True
+        flash('Inscripciones cerradas', 'warning')
+    elif action == 'open':
+        settings['site_closed'] = False
+        flash('Inscripciones abiertas', 'success')
+    save_settings(settings)
     return redirect(url_for('admin_home'))
 
 # --- INICIAR EL SERVIDOR FLASK ---

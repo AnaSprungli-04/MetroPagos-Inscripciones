@@ -9,12 +9,11 @@ from werkzeug.utils import secure_filename
 
 from dotenv import load_dotenv
 
-load_dotenv() # Carga las variables del archivo .env
-# ... el resto de tu cÃ³digo
+load_dotenv()
 app = Flask(__name__)
+
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
 
-# ConfiguraciÃ³n del logger para ver los mensajes en la consola
 app.logger.setLevel(logging.INFO)
 
 SETTINGS_PATH = os.path.join(os.path.dirname(__file__), 'settings.json')
@@ -32,10 +31,7 @@ def load_settings():
             "title_strong": "Metropolitano",
             "base_price": 0,
             "site_closed": False,
-            "classes": [
-                {"name": "ILCA 7", "closed": False, "price": 40000},
-                {"name": "Snipe", "closed": False, "price": 70000}
-            ]
+            "classes": []
         }
 
 
@@ -96,12 +92,12 @@ PRECIOS_BENEFICIO = {
 }
 
 
-# --- RUTAS DE LA APLICACIÃ“N ---
+# --- RUTAS DE LA APLICACION ---
 
 @app.route('/')
 def index():
-    """Renderiza la pÃ¡gina principal con el formulario de inscripciÃ³n."""
-    return render_template('cerrada.html', page_title="InscripciÃ³n cerrada")
+    """Renderiza la pa¡gina principal con el formulario de inscripciÃ³n."""
+    return render_template('cerrada.html', page_title="Inscripcion cerrada")
 
 @app.route('/process_inscription', methods=['POST'])
 def process_inscription():
@@ -336,7 +332,6 @@ def site_closed_gate():
 
 @app.route('/inscripciones')
 def inscripciones():
-    """Renderiza la pÃ¡gina de inscripciones con datos de settings.json."""
     settings = load_settings()
     if settings.get("site_closed"):
         return render_template('cerrada.html', page_title="Inscripción cerrada")
@@ -345,7 +340,6 @@ def inscripciones():
     title_strong = settings.get("title_strong", "Metropolitano")
     classes = settings.get("classes", [])
     enabled_classes = [c["name"] for c in classes if not c.get("closed", False)]
-
     return render_template(
         'index.html',
         page_title=f"{title_main} {title_strong}",
@@ -355,58 +349,57 @@ def inscripciones():
         classes=classes,
         enabled_classes=enabled_classes
     )
-
 # --- ADMIN ---
 
 @app.route('/admin', methods=['GET'])
 def admin_home():
     if not session.get('is_admin'):
         return render_template('admin_login.html')
+
     settings = load_settings()
-    if settings.get("site_closed"):
-        return render_template('cerrada.html', page_title="Inscripción cerrada")
+    # ⚠️ No devolver cerrada.html aquí
     return render_template('admin.html', settings=settings)
 
 
 @app.route('/admin/login', methods=['POST'])
 def admin_login():
+    """
+    Valida la contraseña y crea la sesión de admin.
+    """
     password = request.form.get('password', '')
     expected = os.environ.get('ADMIN_PASSWORD')
     if expected and password == expected:
         session['is_admin'] = True
         return redirect(url_for('admin_home'))
-    flash('ContraseÃ±a incorrecta', 'danger')
+    flash('Contraseña incorrecta', 'danger')
     return redirect(url_for('admin_home'))
-
 
 @app.route('/admin/logout', methods=['POST'])
 def admin_logout():
+    """
+    Cierra sesión de administrador.
+    """
     session.clear()
     return redirect(url_for('admin_home'))
 
-
-@app.route('/admin/save', methods=['POST'])
-def admin_save():
+@app.route('/admin/site_state', methods=['POST'])
+def admin_site_state():
+    """
+    Cambia el estado global de inscripciones (abrir/cerrar).
+    ✅ Actualiza settings.json y regresa al panel admin.
+    """
     if not session.get('is_admin'):
         return redirect(url_for('admin_home'))
-
+    action = request.form.get('action')
     settings = load_settings()
-
-    # Eliminar clase por índice si se solicitó
-    delete_idx = request.form.get('delete')
-    if delete_idx is not None:
-        try:
-            di = int(delete_idx)
-            classes = settings.get('classes', [])
-            if 0 <= di < len(classes):
-                classes.pop(di)
-                settings['classes'] = classes
-                save_settings(settings)
-                flash('Clase eliminada', 'success')
-                return redirect(url_for('admin_home'))
-        except Exception:
-            flash('No se pudo eliminar la clase', 'danger')
-            return redirect(url_for('admin_home'))
+    if action == 'close':
+        settings['site_closed'] = True
+        flash('Inscripciones cerradas', 'warning')
+    elif action == 'open':
+        settings['site_closed'] = False
+        flash('Inscripciones abiertas', 'success')
+    save_settings(settings)
+    return redirect(url_for('admin_home'))
 
     # Textos
     settings['title_main'] = request.form.get('title_main', settings.get('title_main', 'Inscripciones')).strip()

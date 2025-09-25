@@ -137,11 +137,10 @@
               <hr>
               <div class="class-item d-flex align-items-center gap-2 flex-wrap">
                 <label class="form-label">➕</label>
-                <input class="form-check-input" type="checkbox" id="new_class_open" name="new_class_open" checked>
                 <label class="form-check-label me-2" for="new_class_open"></label>
                 <input class="form-control" type="text" name="new_class" placeholder="Agregar nueva clase">
                 <input class="form-control" style="max-width: 140px" type="number" min="0" step="1"
-                            name="new_class_price" placeholder="Precio">
+                       name="new_class_price" placeholder="Precio">
                 <button type="submit" class="btn btn-outline-primary btn-sm">
                   <i class="bi bi-plus-lg me-1"></i>Agregar
                 </button>
@@ -151,14 +150,15 @@
               </div>
             </div>
             <h5 class="mb-3">Descuentos</h5>
-              <div class="d-flex align-items-center mb-3">
-                <div class="form-check me-2">
-                  <input class="form-check-input" type="checkbox" id="discount_enabled" name="discount_enabled" {% if settings.discount_enabled %}checked{% endif %}>
-                  <label class="form-check-label" for="discount_enabled">Habilitar descuentos</label>
-                </div>
-                <input class="form-control" type="text" id="discount_description" name="discount_description" value="{{ settings.discount_description }}" placeholder="Descripción del descuento" {% if not settings.discount_enabled %}disabled{% endif %}>
+            <div class="d-flex align-items-center mb-3">
+              <input class="form-check-input" type="checkbox" id="discount_enabled" name="discount_enabled" {% if settings.discount_enabled %}checked{% endif %}>
+              <label class="form-check-label" for="discount_enabled">Habilitar descuento</label>
+              <div class="input-group">
+                <input class="form-control" type="number" id="discount_percentage" name="discount_percentage" value="{{ settings.discount_percentage }}" min="0" max="100" placeholder="0-100">
+                <span class="input-group-text">%</span>
               </div>
-              
+            </div>
+           </div>
           </div>
         </div>
 

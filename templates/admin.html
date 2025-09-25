@@ -7,6 +7,12 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    .admin-card {
+      max-width: 900px;
+      margin: auto;
+    }
+  </style>
 </head>
 <body>
   <div class="container my-3">
@@ -52,7 +58,7 @@
         {% endfor %}
       {% endif %}
       {% endwith %}
-      <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin_save') }}">
+      <form id="adminForm" method="POST" enctype="multipart/form-data" action="{{ url_for('admin_save') }}">
         <div class="row g-4">
           <div class="col-md-6">
             <div class="mb-3">
@@ -91,45 +97,93 @@
               <input class="form-check-input" type="checkbox" id="allow_cash_payments" name="allow_cash_payments" {% if settings.allow_cash_payments %}checked{% endif %}>
               <label class="form-check-label" for="allow_cash_payments">Permitir pagos en efectivo (RapiPago, Pago Fácil, etc.)</label>
             </div>
+            <hr>
+            <h5 class="mb-3">Descuentos</h5>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="discount_enabled" name="discount_enabled" {% if settings.discount_enabled %}checked{% endif %}>
+              <label class="form-check-label" for="discount_enabled">Habilitar descuentos</label>
+            </div>
+            <div class="mb-3">
+              <label for="discount_description" class="form-label">Descripción del descuento</label>
+              <input class="form-control" type="text" id="discount_description" name="discount_description" value="{{ settings.discount_description }}" placeholder="Ej: 'Pre-inscripción'">
+            </div>
           </div>
           <div class="col-md-6">
             <label class="form-label">Clases disponibles</label>
             <div class="border rounded p-3">
+              <div class="d-flex align-items-center mb-2">
+                <div class="row g-2 w-100">
+                  <div class="col">**Estado**</div>
+                  <div class="col">**Nombre**</div>
+                  <div class="col">**Precio**</div>
+                  {% if settings.discount_enabled %}
+                  <div class="col">**Precio c/Desc.**</div>
+                  {% endif %}
+                  <div class="col-auto">**Acciones**</div>
+                </div>
+              </div>
               {% for cls in settings.classes %}
                 <div class="class-item mb-2 d-flex align-items-center gap-2 flex-wrap">
-                  <input class="form-check-input" type="checkbox" id="open-{{ loop.index0 }}"
+                  <div class="row g-2 w-100">
+                    <div class="col d-flex align-items-center">
+                      <input class="form-check-input me-2" type="checkbox" id="open-{{ loop.index0 }}"
                               name="open-{{ loop.index0 }}" {% if not cls.closed %}checked{% endif %}>
-                  <label class="form-check-label me-2" for="open-{{ loop.index0 }}"></label>
-                  <input class="form-control" type="text" name="name-{{ loop.index0 }}"
+                      <label class="form-check-label" for="open-{{ loop.index0 }}">Abierta</label>
+                    </div>
+                    <div class="col">
+                      <input class="form-control" type="text" name="name-{{ loop.index0 }}"
                               value="{{ cls.name }}" placeholder="Nombre de la clase">
-                  <input class="form-control" style="max-width: 140px" type="number" min="0" step="1"
+                    </div>
+                    <div class="col">
+                      <input class="form-control" type="number" min="0" step="1"
                               name="price-{{ loop.index0 }}" value="{{ cls.price or '' }}" placeholder="Precio">
-                  <button class="btn btn-outline-danger btn-sm ms-2" type="submit" name="delete"
+                    </div>
+                    {% if settings.discount_enabled %}
+                    <div class="col">
+                      <input class="form-control" type="number" min="0" step="1"
+                              name="discount_price-{{ loop.index0 }}" value="{{ cls.discount_price or '' }}" placeholder="Precio desc.">
+                    </div>
+                    {% endif %}
+                    <div class="col-auto d-flex align-items-center">
+                      <button class="btn btn-outline-danger btn-sm" type="submit" name="delete"
                               value="{{ loop.index0 }}" onclick="return confirm('¿Estás seguro de que quieres eliminar esta clase?')">
-                    <i class="bi bi-trash"></i>
-                  </button>
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               {% endfor %}
               <div class="mt-3 border-top pt-3">
                 <p>Agregar nueva clase:</p>
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                  <input class="form-check-input" type="checkbox" id="new_class_open" name="new_class_open" checked>
-                  <label class="form-check-label me-2" for="new_class_open"></label>
+                  <input class="form-check-input me-2" type="checkbox" id="new_class_open" name="new_class_open" checked>
+                  <label class="form-check-label me-2" for="new_class_open">Abierta</label>
                   <input class="form-control" type="text" name="new_class" placeholder="Nombre de la clase">
                   <input class="form-control" style="max-width: 140px" type="number" min="0" step="1" name="new_class_price" placeholder="Precio">
+                  {% if settings.discount_enabled %}
+                  <input class="form-control" style="max-width: 140px" type="number" min="0" step="1" name="new_class_discount_price" placeholder="Precio desc.">
+                  {% endif %}
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="d-flex justify-content-end mt-4">
+        <div class="d-flex justify-content-center mt-4 gap-3">
           <button type="submit" class="btn btn-primary btn-lg">
             <i class="bi bi-save"></i> Guardar Cambios
           </button>
+          <a href="{{ url_for('inscripciones') }}" class="btn btn-secondary btn-lg">
+            <i class="bi bi-arrow-left"></i> Volver a Inscripción
+          </a>
         </div>
       </form>
     </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.getElementById('discount_enabled').addEventListener('change', function() {
+      window.location.reload();
+    });
+  </script>
 </body>
 </html>

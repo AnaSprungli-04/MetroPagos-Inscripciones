@@ -30,6 +30,15 @@ def load_settings():
                 }
             if "allow_cash_payments" not in settings:
                 settings["allow_cash_payments"] = True
+            if "discount_enabled" not in settings:
+                settings["discount_enabled"] = False
+            if "discount_description" not in settings:
+                settings["discount_description"] = ""
+            # Asegurar que cada clase tenga un precio de descuento
+            for cls in settings.get("classes", []):
+                if "discount_price" not in cls:
+                    cls["discount_price"] = None
+
             return settings
     except Exception:
         return {
@@ -43,7 +52,9 @@ def load_settings():
                 "competitors_id": "1FAIpQLSeA0tbwyKZ-u8zra-W6hlJL8TCTQOayqCpKwya3sON0ubS0nA",
                 "trainers_id": "1FAIpQLSeZGar2xA3OR6SwNbKatSj1CLWQjRTmWyM0t-LOabpRWZYZ4g"
             },
-            "allow_cash_payments": True
+            "allow_cash_payments": True,
+            "discount_enabled": False,
+            "discount_description": ""
         }
 
 def save_settings(data):
@@ -53,19 +64,14 @@ def save_settings(data):
 def allowed_logo(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_LOGO_EXTENSIONS
     
-
-# --- CONFIGURACIÓN DE MERCADO PAGO ---
 MERCADO_PAGO_ACCESS_TOKEN = os.environ.get("MERCADO_PAGO_ACCESS_TOKEN")
 sdk = mercadopago.SDK(MERCADO_PAGO_ACCESS_TOKEN)
 
 app.logger.info(f"DEBBUGING: {MERCADO_PAGO_ACCESS_TOKEN[:10]}")
 
-# IDs de Google Forms (ahora se cargan dinámicamente)
 GOOGLE_FORMS_ENTRY_ID_NUM_OPERACION = "entry.1161481877"
 GOOGLE_FORMS_ENTRY_ID_CLASE_BARCO = "entry.1553765108"
 URL_BASE = "https://metropolitanopagos-inscripciones.onrender.com"
-
-# --- RUTAS DE LA APLICACION ---
 
 @app.route('/')
 def index():
@@ -103,16 +109,24 @@ def process_inscription():
         item_title = "Inscripcion Competidor"
         
         if clase_barco:
-            class_price = None
+            class_info = None
             for c in settings.get("classes", []):
                 if c.get("name") == clase_barco:
-                    class_price = c.get("price")
+                    class_info = c
                     break
-            if class_price is None:
+            
+            if class_info is None:
                 app.logger.error("Competidor sin clase de barco o clase de barco inválida.")
                 return "Error: Por favor, selecciona tu clase de barco.", 400
-            total_price = int(class_price)
-            item_title += f" - {clase_barco}"
+            
+            # Lógica del descuento
+            if settings.get("discount_enabled") and class_info.get("discount_price") is not None:
+                total_price = int(class_info["discount_price"])
+                item_title += f" - {clase_barco} ({settings.get('discount_description', 'Descuento')})"
+            else:
+                total_price = int(class_info["price"])
+                item_title += f" - {clase_barco}"
+                
         else:
             app.logger.error("Competidor sin clase de barco o clase de barco inválida.")
             return "Error: Por favor, selecciona tu clase de barco.", 400
@@ -253,6 +267,8 @@ def inscripciones():
     title_strong = settings.get("title_strong", "Metropolitano")
     classes = settings.get("classes", [])
     enabled_classes = [c["name"] for c in classes if not c.get("closed", False)]
+    discount_enabled = settings.get("discount_enabled", False)
+    discount_description = settings.get("discount_description", "")
     return render_template(
         'index.html',
         page_title=f"{title_main} {title_strong}",
@@ -260,7 +276,9 @@ def inscripciones():
         title_main=title_main,
         title_strong=title_strong,
         classes=classes,
-        enabled_classes=enabled_classes
+        enabled_classes=enabled_classes,
+        discount_enabled=discount_enabled,
+        discount_description=discount_description
     )
 
 # --- ADMIN ---
@@ -310,12 +328,13 @@ def admin_save():
     settings['title_main'] = request.form.get('title_main', settings.get('title_main', 'Inscripciones')).strip()
     settings['title_strong'] = request.form.get('title_strong', settings.get('title_strong', 'Metropolitano')).strip()
 
-    # Guardar los nuevos IDs de Google Forms
     settings["google_forms"]["competitors_id"] = request.form.get('google_forms_competitors_id', settings["google_forms"]["competitors_id"]).strip()
     settings["google_forms"]["trainers_id"] = request.form.get('google_forms_trainers_id', settings["google_forms"]["trainers_id"]).strip()
 
-    # Guardar el estado del checkbox para pagos en efectivo
     settings["allow_cash_payments"] = request.form.get('allow_cash_payments') == 'on'
+    
+    settings["discount_enabled"] = request.form.get('discount_enabled') == 'on'
+    settings["discount_description"] = request.form.get('discount_description', '').strip()
 
     updated_classes = []
     for idx, cls in enumerate(settings.get('classes', [])):
@@ -323,12 +342,17 @@ def admin_save():
         closed = not open_checked
         name = request.form.get(f'name-{idx}', cls.get('name')).strip()
         price_val = request.form.get(f'price-{idx}')
+        discount_price_val = request.form.get(f'discount_price-{idx}')
+        
         try:
             price = int(price_val) if price_val else cls.get('price')
+            discount_price = int(discount_price_val) if discount_price_val else None
         except Exception:
             price = cls.get('price')
+            discount_price = cls.get('discount_price', None)
+            
         if name:
-            updated_classes.append({"name": name, "closed": closed, "price": price})
+            updated_classes.append({"name": name, "closed": closed, "price": price, "discount_price": discount_price})
     
     new_class = request.form.get('new_class', '').strip()
     if new_class:
@@ -337,11 +361,14 @@ def admin_save():
             new_open = request.form.get('new_class_open') == 'on'
             new_closed = not new_open
             new_price_val = request.form.get('new_class_price')
+            new_discount_price_val = request.form.get('new_class_discount_price')
             try:
                 new_price = int(new_price_val) if new_price_val else None
+                new_discount_price = int(new_discount_price_val) if new_discount_price_val else None
             except Exception:
                 new_price = None
-            updated_classes.append({"name": new_class, "closed": new_closed, "price": new_price})
+                new_discount_price = None
+            updated_classes.append({"name": new_class, "closed": new_closed, "price": new_price, "discount_price": new_discount_price})
     
     settings['classes'] = updated_classes
     

@@ -104,11 +104,9 @@
             <div class="border rounded p-3">
               <div class="d-flex align-items-center mb-2">
                 <div class="row g-2 w-100">
-                  <div class="col-4">**Nombre**</div>
+                  <div class="col-5">**Nombre**</div>
                   <div class="col-4">**Precio**</div>
-                  <div class="col-4 discount-header" style="display: {% if settings.discount_enabled %}block{% else %}none{% endif %};">
-                    **Precio c/Desc.**
-                  </div>
+                  <div class="col-auto">**Acciones**</div>
                 </div>
               </div>
               {% for cls in settings.classes %}
@@ -120,8 +118,6 @@
                               value="{{ cls.name }}" placeholder="Nombre de la clase">
                   <input class="form-control" style="max-width: 140px" type="number" min="0" step="1"
                               name="price-{{ loop.index0 }}" value="{{ cls.price or '' }}" placeholder="Precio">
-                  <input class="form-control discount-price-input" style="max-width: 140px; display: {% if settings.discount_enabled %}block{% else %}none{% endif %};" type="number" min="0" step="1"
-                              name="discount_price-{{ loop.index0 }}" value="{{ cls.discount_price or '' }}" placeholder="Precio desc.">
                   <button class="btn btn-outline-danger btn-sm ms-2" type="submit" name="delete"
                               value="{{ loop.index0 }}" title="Borrar clase" onclick="return confirm('¿Estás seguro de que quieres eliminar esta clase?')">
                     <i class="bi bi-x-lg"></i>
@@ -130,14 +126,11 @@
               {% endfor %}
               <hr>
               <div class="d-flex align-items-center gap-2 flex-wrap">
-                <label class="form-label">➕</label>
                 <input class="form-check-input" type="checkbox" id="new_class_open" name="new_class_open" checked>
                 <label class="form-check-label me-2" for="new_class_open"></label>
-                <input class="form-control" type="text" name="new_class" placeholder="Nombre de la clase">
+                <input class="form-control" type="text" name="new_class" placeholder="Agregar nueva clase">
                 <input class="form-control" style="max-width: 140px" type="number" min="0" step="1"
                             name="new_class_price" placeholder="Precio">
-                <input class="form-control discount-price-input" style="max-width: 140px; display: {% if settings.discount_enabled %}block{% else %}none{% endif %};" type="number" min="0" step="1"
-                            name="new_class_discount_price" placeholder="Precio desc.">
                 <button type="submit" class="btn btn-primary btn-sm">
                   <i class="bi bi-plus-lg me-1"></i>Agregar
                 </button>
@@ -158,9 +151,12 @@
               <div class="d-flex align-items-center mb-3">
                 <div class="form-check me-2">
                   <input class="form-check-input" type="checkbox" id="discount_enabled" name="discount_enabled" {% if settings.discount_enabled %}checked{% endif %}>
-                  <label class="form-check-label" for="discount_enabled">Habilitar descuentos</label>
+                  <label class="form-check-label" for="discount_enabled">Habilitar descuento global</label>
                 </div>
-                <input class="form-control" type="text" id="discount_description" name="discount_description" value="{{ settings.discount_description }}" placeholder="Descripción del descuento">
+                <div class="input-group">
+                  <input class="form-control" type="number" id="discount_percentage" name="discount_percentage" value="{{ settings.discount_percentage }}" min="0" max="100" placeholder="0-100">
+                  <span class="input-group-text">%</span>
+                </div>
               </div>
             </div>
           </div>
@@ -178,27 +174,5 @@
     </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const discountEnabledCheckbox = document.getElementById('discount_enabled');
-      const discountPriceInputs = document.querySelectorAll('.discount-price-input');
-      const discountHeader = document.querySelector('.discount-header');
-      const discountDescriptionInput = document.getElementById('discount_description');
-      
-      function toggleDiscountFields() {
-        const isEnabled = discountEnabledCheckbox.checked;
-        discountPriceInputs.forEach(input => {
-          input.style.display = isEnabled ? 'block' : 'none';
-        });
-        discountHeader.style.display = isEnabled ? 'block' : 'none';
-        discountDescriptionInput.disabled = !isEnabled;
-      }
-
-      discountEnabledCheckbox.addEventListener('change', toggleDiscountFields);
-
-      // Llama a la función al cargar la página para establecer el estado inicial
-      toggleDiscountFields();
-    });
-  </script>
 </body>
 </html>

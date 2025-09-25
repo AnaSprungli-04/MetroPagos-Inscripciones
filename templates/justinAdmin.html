@@ -7,12 +7,6 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <style>
-    .admin-card {
-      max-width: 900px;
-      margin: auto;
-    }
-  </style>
 </head>
 <body>
   <div class="container my-3">
@@ -63,6 +57,7 @@
 
       <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin_save') }}">
         <div class="row g-4">
+          <!-- Columna izquierda -->
           <div class="col-md-6">
             <div class="mb-3">
               <label class="form-label">Logo actual</label>
@@ -84,39 +79,23 @@
                 <input class="form-control" type="text" name="title_strong" value="{{ settings.title_strong }}">
               </div>
             </div>
-
-            <hr>
-            <div class="p-3 rounded" style="background-color: #f8f9fa;">
-              <h5 class="mb-3">Links de Google Forms</h5>
-              <div class="mb-3">
-                <label for="google_forms_competitors_id" class="form-label">ID Google Forms Competidores</label>
-                <input class="form-control" type="text" id="google_forms_competitors_id" name="google_forms_competitors_id" value="{{ settings.google_forms.competitors_id }}">
-              </div>
-              <div class="mb-3">
-                <label for="google_forms_trainers_id" class="form-label">ID Google Forms Entrenadores</label>
-                <input class="form-control" type="text" id="google_forms_trainers_id" name="google_forms_trainers_id" value="{{ settings.google_forms.trainers_id }}">
-              </div>
-            </div>
           </div>
 
+          <!-- Columna derecha -->
           <div class="col-md-6">
             <label class="form-label">Clases disponibles</label>
             <div class="border rounded p-3">
               {% for cls in settings.classes %}
                 <div class="class-item mb-2 d-flex align-items-center gap-2 flex-wrap">
                   <input class="form-check-input" type="checkbox" id="open-{{ loop.index0 }}"
-                              name="open-{{ loop.index0 }}" {% if not cls.closed %}checked{% endif %}>
+                         name="open-{{ loop.index0 }}" {% if not cls.closed %}checked{% endif %}>
                   <label class="form-check-label me-2" for="open-{{ loop.index0 }}"></label>
                   <input class="form-control" type="text" name="name-{{ loop.index0 }}"
-                              value="{{ cls.name }}" placeholder="Nombre de la clase">
+                         value="{{ cls.name }}" placeholder="Nombre de la clase">
                   <input class="form-control" style="max-width: 140px" type="number" min="0" step="1"
-                              name="price-{{ loop.index0 }}" value="{{ cls.price or '' }}" placeholder="Precio">
-                  {% if settings.discount_enabled %}
-                  <input class="form-control" style="max-width: 140px" type="number" min="0" step="1"
-                              name="discount_price-{{ loop.index0 }}" value="{{ cls.discount_price or '' }}" placeholder="Precio desc.">
-                  {% endif %}
+                         name="price-{{ loop.index0 }}" value="{{ cls.price or '' }}" placeholder="Precio">
                   <button class="btn btn-outline-danger btn-sm ms-2" type="submit" name="delete"
-                              value="{{ loop.index0 }}" title="Borrar clase">
+                          value="{{ loop.index0 }}" title="Borrar clase">
                     <i class="bi bi-x-lg"></i>
                   </button>
                 </div>
@@ -127,53 +106,26 @@
                 <label class="form-check-label me-2" for="new_class_open"></label>
                 <input class="form-control" type="text" name="new_class" placeholder="Agregar nueva clase">
                 <input class="form-control" style="max-width: 140px" type="number" min="0" step="1"
-                            name="new_class_price" placeholder="Precio">
-                {% if settings.discount_enabled %}
-                <input class="form-control" style="max-width: 140px" type="number" min="0" step="1"
-                            name="new_class_discount_price" placeholder="Precio desc.">
-                {% endif %}
+                       name="new_class_price" placeholder="Precio">
               </div>
               <div class="form-text">
                 Desmarcar el checkbox hará que la nueva clase aparezca deshabilitada y en gris con “- clase cerrada”.
               </div>
             </div>
-            
-            <div class="mt-4">
-              <h5 class="mb-3">Configuración de Pagos</h5>
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" id="allow_cash_payments" name="allow_cash_payments" {% if settings.allow_cash_payments %}checked{% endif %}>
-                <label class="form-check-label" for="allow_cash_payments">Permitir pagos en efectivo (RapiPago, Pago Fácil, etc.)</label>
-              </div>
-              <hr>
-              <h5 class="mb-3">Descuentos</h5>
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" id="discount_enabled" name="discount_enabled" {% if settings.discount_enabled %}checked{% endif %}>
-                <label class="form-check-label" for="discount_enabled">Habilitar descuentos</label>
-              </div>
-              <div class="mb-3">
-                <label for="discount_description" class="form-label">Descripción del descuento</label>
-                <input class="form-control" type="text" id="discount_description" name="discount_description" value="{{ settings.discount_description }}" placeholder="Ej: 'Pre-inscripción'">
-              </div>
-            </div>
           </div>
         </div>
 
-        <div class="text-center mt-4 d-flex justify-content-center gap-3">
+        <div class="text-center mt-4 ">
           <button class="btn btn-primary" type="submit">
             <i class="bi bi-save me-1"></i> Guardar cambios
           </button>
-          <a class="btn btn-primary" href="{{ url_for('inscripciones') }}">
-            <i class="bi bi-house me-1"></i> Volver a inscripción
+          <a class="btn btn-primary" href="{{ url_for('index') }}">
+            <i class="bi bi-house me-1"></i> Volver a inscripcion
           </a>
         </div>
       </form>
     </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    document.getElementById('discount_enabled').addEventListener('change', function() {
-      window.location.reload();
-    });
-  </script>
 </body>
 </html>

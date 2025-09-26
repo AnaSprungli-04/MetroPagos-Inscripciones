@@ -56,10 +56,12 @@
                                     </select>
                                 </div>
 
+                                {% if discount_enabled and discount_description %}
                                 <div class="mb-4 form-check">
-                                    <input type="checkbox" class="form-check-input" id="mas_150km" name="mas_150km">
-                                    <label class="form-check-label" for="mas_150km">Mi residencia habitual está a más de 150 km de CABA (aplica beneficio 4.2 del AR)</label>
+                                    <input type="checkbox" class="form-check-input" id="apply_discount" name="apply_discount">
+                                    <label class="form-check-label" for="apply_discount">{{ discount_description }}</label>
                                 </div>
+                            {% endif %}
                             </div>
 
                             <hr class="my-4">

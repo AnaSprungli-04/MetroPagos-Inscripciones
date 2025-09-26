@@ -34,10 +34,14 @@ def load_settings():
                 settings["discount_enabled"] = False
             if "discount_description" not in settings:
                 settings["discount_description"] = ""
+            if "discount_percentage" not in settings:
+                settings["discount_percentage"] = 0
             # Asegurar que cada clase tenga un precio de descuento
             for cls in settings.get("classes", []):
                 if "discount_price" not in cls:
-                    cls["discount_price"] = None
+                    # Inicialmente, el precio con descuento será el precio normal
+                    # Esto se actualizará automáticamente si el admin usa el porcentaje
+                    cls["discount_price"] = None 
 
             return settings
     except Exception:
@@ -54,6 +58,7 @@ def load_settings():
             },
             "allow_cash_payments": True,
             "discount_enabled": False,
+            "discount_percentage": 0,
             "discount_description": ""
         }
 
@@ -71,7 +76,7 @@ app.logger.info(f"DEBBUGING: {MERCADO_PAGO_ACCESS_TOKEN[:10]}")
 
 GOOGLE_FORMS_ENTRY_ID_NUM_OPERACION = "entry.1161481877"
 GOOGLE_FORMS_ENTRY_ID_CLASE_BARCO = "entry.1553765108"
-URL_BASE = "https://metropolitanopagos-inscripciones.onrender.com"
+URL_BASE = "https://metropolitanopagos-inscripciones.onrender.com" # Asume que esta es tu URL base
 
 @app.route('/')
 def index():
@@ -89,6 +94,9 @@ def process_inscription():
         return render_template('cerrada.html', page_title="Inscripción cerrada"), 403
     
     clase_barco = request.form.get('clase_barco')
+    
+    # Nuevo: Verifica si el competidor marcó el checkbox para aplicar el descuento
+    apply_discount = request.form.get('mas_150km') == 'on'
 
     if rol == 'entrenador':
         google_forms_id = settings["google_forms"]["trainers_id"]
@@ -119,10 +127,20 @@ def process_inscription():
                 app.logger.error("Competidor sin clase de barco o clase de barco inválida.")
                 return "Error: Por favor, selecciona tu clase de barco.", 400
             
-            # Lógica del descuento
-            if settings.get("discount_enabled") and class_info.get("discount_price") is not None:
-                total_price = int(class_info["discount_price"])
-                item_title += f" - {clase_barco} ({settings.get('discount_description', 'Descuento')})"
+            # Lógica del descuento **ACTUALIZADA**
+            # Aplica descuento si: 1) Está habilitado en Admin, 2) El usuario lo marcó y 3) Hay un precio normal.
+            is_discounted = settings.get("discount_enabled") and apply_discount and class_info.get("price") is not None
+            
+            if is_discounted:
+                # Calculamos el precio con descuento. Usamos el precio normal - el porcentaje.
+                original_price = int(class_info["price"])
+                discount_percentage = int(settings.get("discount_percentage", 0))
+                
+                # Cálculo: Precio * (1 - Porcentaje / 100)
+                total_price = original_price * (1 - discount_percentage / 100)
+                total_price = max(1, round(total_price, 2)) # Asegurar que el precio es al menos 1
+                
+                item_title += f" - {clase_barco} ({settings.get('discount_description', 'Descuento aplicado')})"
             else:
                 total_price = int(class_info["price"])
                 item_title += f" - {clase_barco}"
@@ -133,7 +151,7 @@ def process_inscription():
 
         total_price = max(1, round(total_price, 2))
 
-        app.logger.info(f"Calculando precio para competidor: Rol={rol}, Barco={clase_barco} -> Precio Final={total_price}")
+        app.logger.info(f"Calculando precio para competidor: Rol={rol}, Barco={clase_barco}, Desc. Aplicado={is_discounted} -> Precio Final={total_price}")
 
         encoded_clase_barco = urllib.parse.quote_plus(clase_barco)
         
@@ -267,8 +285,11 @@ def inscripciones():
     title_strong = settings.get("title_strong", "Metropolitano")
     classes = settings.get("classes", [])
     enabled_classes = [c["name"] for c in classes if not c.get("closed", False)]
+    
+    # Variables necesarias para la nueva lógica en index.html
     discount_enabled = settings.get("discount_enabled", False)
     discount_description = settings.get("discount_description", "")
+    
     return render_template(
         'index.html',
         page_title=f"{title_main} {title_strong}",
@@ -335,6 +356,13 @@ def admin_save():
     
     settings["discount_enabled"] = request.form.get('discount_enabled') == 'on'
     settings["discount_description"] = request.form.get('discount_description', '').strip()
+    
+    # Guardar el porcentaje de descuento
+    try:
+        settings["discount_percentage"] = int(request.form.get('discount_percentage', 0))
+    except ValueError:
+        flash('El porcentaje de descuento debe ser un número entero válido.', 'danger')
+        return redirect(url_for('admin_home'))
 
     updated_classes = []
     for idx, cls in enumerate(settings.get('classes', [])):
@@ -342,14 +370,16 @@ def admin_save():
         closed = not open_checked
         name = request.form.get(f'name-{idx}', cls.get('name')).strip()
         price_val = request.form.get(f'price-{idx}')
-        discount_price_val = request.form.get(f'discount_price-{idx}')
         
         try:
             price = int(price_val) if price_val else cls.get('price')
-            discount_price = int(discount_price_val) if discount_price_val else None
+            
+            # El precio de descuento ya no se guarda por clase, se calcula
+            discount_price = None 
+            
         except Exception:
             price = cls.get('price')
-            discount_price = cls.get('discount_price', None)
+            discount_price = None
             
         if name:
             updated_classes.append({"name": name, "closed": closed, "price": price, "discount_price": discount_price})
@@ -358,13 +388,12 @@ def admin_save():
     if new_class:
         names_lower = {c['name'].lower() for c in updated_classes}
         if new_class.lower() not in names_lower:
-            new_open = request.form.get('new_class_open') == 'on'
-            new_closed = not new_open
+            # La nueva clase siempre estará abierta por defecto al agregar
+            new_closed = False 
             new_price_val = request.form.get('new_class_price')
-            new_discount_price_val = request.form.get('new_class_discount_price')
             try:
                 new_price = int(new_price_val) if new_price_val else None
-                new_discount_price = int(new_discount_price_val) if new_discount_price_val else None
+                new_discount_price = None # Se calcula dinámicamente
             except Exception:
                 new_price = None
                 new_discount_price = None
@@ -406,4 +435,5 @@ def admin_site_state():
     return redirect(url_for('admin_home'))
 
 if __name__ == '__main__':
+    # Usar debug=True solo para desarrollo local
     app.run(debug=False, port=5000)

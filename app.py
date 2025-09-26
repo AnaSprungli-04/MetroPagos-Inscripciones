@@ -36,11 +36,9 @@ def load_settings():
                 settings["discount_description"] = ""
             if "discount_percentage" not in settings:
                 settings["discount_percentage"] = 0
-            # Asegurar que cada clase tenga un precio de descuento
+            # Asegurar que cada clase tenga un precio de descuento (aunque ahora se calcula)
             for cls in settings.get("classes", []):
                 if "discount_price" not in cls:
-                    # Inicialmente, el precio con descuento será el precio normal
-                    # Esto se actualizará automáticamente si el admin usa el porcentaje
                     cls["discount_price"] = None 
 
             return settings
@@ -95,8 +93,8 @@ def process_inscription():
     
     clase_barco = request.form.get('clase_barco')
     
-    # Nuevo: Verifica si el competidor marcó el checkbox para aplicar el descuento
-    apply_discount = request.form.get('mas_150km') == 'on'
+    # 💥 CORRECCIÓN CLAVE: Lee el campo 'apply_discount' de index.html 
+    apply_discount = request.form.get('apply_discount') == 'on'
 
     if rol == 'entrenador':
         google_forms_id = settings["google_forms"]["trainers_id"]
@@ -140,8 +138,10 @@ def process_inscription():
                 total_price = original_price * (1 - discount_percentage / 100)
                 total_price = max(1, round(total_price, 2)) # Asegurar que el precio es al menos 1
                 
+                # Se actualiza el título del ítem de Mercado Pago para reflejar el descuento
                 item_title += f" - {clase_barco} ({settings.get('discount_description', 'Descuento aplicado')})"
             else:
+                # Si no aplica descuento, usa el precio normal
                 total_price = int(class_info["price"])
                 item_title += f" - {clase_barco}"
                 
@@ -287,10 +287,8 @@ def inscripciones():
     
     classes = settings.get("classes", [])
     
-    # 🌟 CAMBIO CLAVE: Ordenar las clases antes de enviarlas a la plantilla 🌟
-    # Usamos sorted() con una clave lambda. El campo 'closed' es un booleano (False/True).
-    # False se evalúa como 0 (arriba), True se evalúa como 1 (abajo).
-    # Las clases NO CERRADAS (False) irán PRIMERO.
+    # Ordenar las clases antes de enviarlas a la plantilla 
+    # Las clases NO CERRADAS (closed=False) irán PRIMERO.
     sorted_classes = sorted(classes, key=lambda cls: cls.get("closed", False))
     
     enabled_classes = [c["name"] for c in sorted_classes if not c.get("closed", False)]
@@ -363,6 +361,7 @@ def admin_save():
 
     settings["allow_cash_payments"] = request.form.get('allow_cash_payments') == 'on'
     
+    # Guardar configuración de descuento desde el admin.html
     settings["discount_enabled"] = request.form.get('discount_enabled') == 'on'
     settings["discount_description"] = request.form.get('discount_description', '').strip()
     
@@ -383,7 +382,7 @@ def admin_save():
         try:
             price = int(price_val) if price_val else cls.get('price')
             
-            # El precio de descuento ya no se guarda por clase, se calcula
+            # price_discount ya no se guarda, se calcula dinámicamente en process_inscription
             discount_price = None 
             
         except Exception:

@@ -47,6 +47,10 @@
                                     <select class="form-select" id="claseBarco" name="clase_barco">
                                         <option value="">Selecciona tu clase de barco</option>
                                         {% for cls in classes %}
+                                            {# 
+                                                La variable 'classes' viene ordenada desde app.py (habilitadas arriba, cerradas abajo).
+                                                La lógica de mostrar habilitadas/cerradas se mantiene igual.
+                                            #}
                                             {% if cls.closed %}
                                                 <option value="{{ cls.name }}" class="disabled-option" disabled><s>{{ cls.name }}</s> - clase cerrada</option>
                                             {% else %}
@@ -58,10 +62,10 @@
 
                                 {% if discount_enabled and discount_description %}
                                 <div class="mb-4 form-check">
-                                    <input type="checkbox" class="form-check-input" id="apply_discount" name="apply_discount">
+                                                                        <input type="checkbox" class="form-check-input" id="apply_discount" name="apply_discount">
                                     <label class="form-check-label" for="apply_discount">{{ discount_description }}</label>
                                 </div>
-                            {% endif %}
+                                {% endif %}
                             </div>
 
                             <hr class="my-4">
@@ -72,6 +76,7 @@
                                 </button>
                             </div>
                         </form>
+                        
                     </div>
                 </div>
             </div>
@@ -87,7 +92,9 @@
             const rolCompetidor = document.getElementById('rolCompetidor');
             const competidorFields = document.getElementById('competidorFields');
             const claseBarcoSelect = document.getElementById('claseBarco');
-            const mas150kmCheckbox = document.getElementById('mas_150km');
+            
+            // Se usa 'apply_discount' en lugar de 'mas_150km' para ser coherente con el HTML
+            const applyDiscountCheckbox = document.getElementById('apply_discount'); 
 
             function toggleCompetidorFields() {
                 if (rolCompetidor.checked) {
@@ -97,7 +104,10 @@
                     competidorFields.style.display = 'none';
                     claseBarcoSelect.removeAttribute('required');
                     claseBarcoSelect.value = '';
-                    mas150kmCheckbox.checked = false;
+                    // Limpia el checkbox de descuento si existe
+                    if (applyDiscountCheckbox) {
+                        applyDiscountCheckbox.checked = false;
+                    }
                 }
             }
 

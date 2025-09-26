@@ -280,13 +280,21 @@ def inscripciones():
     settings = load_settings()
     if settings.get("site_closed"):
         return render_template('cerrada.html', page_title="Inscripción cerrada")
+    
     logo_path = settings.get("logo", "static/images/Metropolitano.png")
     title_main = settings.get("title_main", "Inscripciones")
     title_strong = settings.get("title_strong", "Metropolitano")
-    classes = settings.get("classes", [])
-    enabled_classes = [c["name"] for c in classes if not c.get("closed", False)]
     
-    # Variables necesarias para la nueva lógica en index.html
+    classes = settings.get("classes", [])
+    
+    # 🌟 CAMBIO CLAVE: Ordenar las clases antes de enviarlas a la plantilla 🌟
+    # Usamos sorted() con una clave lambda. El campo 'closed' es un booleano (False/True).
+    # False se evalúa como 0 (arriba), True se evalúa como 1 (abajo).
+    # Las clases NO CERRADAS (False) irán PRIMERO.
+    sorted_classes = sorted(classes, key=lambda cls: cls.get("closed", False))
+    
+    enabled_classes = [c["name"] for c in sorted_classes if not c.get("closed", False)]
+    
     discount_enabled = settings.get("discount_enabled", False)
     discount_description = settings.get("discount_description", "")
     
@@ -296,11 +304,12 @@ def inscripciones():
         logo_path=logo_path,
         title_main=title_main,
         title_strong=title_strong,
-        classes=classes,
+        classes=sorted_classes,  # Usar la lista ordenada
         enabled_classes=enabled_classes,
         discount_enabled=discount_enabled,
         discount_description=discount_description
     )
+
 
 # --- ADMIN ---
 @app.route('/admin', methods=['GET'])

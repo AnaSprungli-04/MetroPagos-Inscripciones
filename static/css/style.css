@@ -104,5 +104,10 @@ h1, label {
 
 
 .admin-card { max-width: 1000px; margin: 0 auto; }
-.class-item { display: flex; align-items: center; gap: .5rem; }
-.class-item input[type="text"] { flex: 1; }
+.class-item { 
+    gap: .5rem; /* Mantiene el espaciado entre elementos */
+}
+/* Asegura que los campos de texto no tengan un ancho fijo que rompa el layout */
+.class-item .form-control {
+    width: auto; /* Permite que Bootstrap maneje el ancho */
+}

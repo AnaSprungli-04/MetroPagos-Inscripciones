@@ -47,10 +47,10 @@
                                     <select class="form-select" id="claseBarco" name="clase_barco">
                                         <option value="">Selecciona tu clase de barco</option>
                                         {% for cls in classes %}
-                                            {% comment %} 
+                                            {# 
                                                 La variable 'classes' viene ordenada desde app.py (habilitadas arriba, cerradas abajo).
                                                 La lógica de mostrar habilitadas/cerradas se mantiene igual.
-                                            {% endcomment %}
+                                            #}
                                             {% if cls.closed %}
                                                 <option value="{{ cls.name }}" class="disabled-option" disabled><s>{{ cls.name }}</s> - clase cerrada</option>
                                             {% else %}
@@ -62,7 +62,7 @@
 
                                 {% if discount_enabled and discount_description %}
                                 <div class="mb-4 form-check">
-                                     <input type="checkbox" class="form-check-input" id="apply_discount" name="apply_discount">
+                                                                        <input type="checkbox" class="form-check-input" id="apply_discount" name="apply_discount">
                                     <label class="form-check-label" for="apply_discount">{{ discount_description }}</label>
                                 </div>
                                 {% endif %}

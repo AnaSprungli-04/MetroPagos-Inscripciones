@@ -113,7 +113,7 @@
                                     <div class="d-flex align-items-center me-2">
                                         <input class="form-check-input me-1" type="checkbox" id="open-{{ loop.index0 }}"
                                                 name="open-{{ loop.index0 }}" {% if not cls.closed %}checked{% endif %}>
-                                        <label class="form-check-label" for="open-{{ loop.index0 }}">Abierta</label>
+                                        <label class="form-check-label" for="open-{{ loop.index0 }}"></label>
                                     </div>
                                     <input class="form-control flex-fill" type="text" name="name-{{ loop.index0 }}"
                                             value="{{ cls.name }}" placeholder="Nombre de la clase">

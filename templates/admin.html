@@ -9,7 +9,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
-    <div class="container my-4"> <div class="card admin-card shadow p-4">
+    <div class="container my-4"> 
+        <div class="card admin-card shadow p-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h1 class="h4 mb-0">Panel de Administración</h1>
                 <form method="POST" action="{{ url_for('admin_logout') }}">
@@ -20,13 +21,15 @@
             </div>
             
             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3">
-                <div class="mb-2 mb-sm-0"> {% if settings.site_closed %}
+                <div class="mb-2 mb-sm-0"> 
+                    {% if settings.site_closed %}
                         <span class="badge text-bg-warning">Inscripciones cerradas</span>
                     {% else %}
                         <span class="badge text-bg-success">Inscripciones abiertas</span>
                     {% endif %}
                 </div>
-                <div class="d-flex gap-2 mt-2 mt-sm-0"> {% if settings.site_closed %}
+                <div class="d-flex gap-2 mt-2 mt-sm-0"> 
+                    {% if settings.site_closed %}
                         <form method="POST" action="{{ url_for('admin_site_state') }}">
                             <input type="hidden" name="action" value="open">
                             <button class="btn btn-success btn-sm" type="submit">
@@ -102,7 +105,8 @@
                     <div class="col-md-6">
                         <label class="form-label">Clases disponibles</label>
                         <div class="border rounded p-3">
-                            <div class="d-none d-sm-flex align-items-center mb-2"> <div class="row g-2 w-100">
+                            <div class="d-none d-sm-flex align-items-center mb-2"> 
+                                <div class="row g-2 w-100">
                                     <div class="col-5">Nombre</div>
                                     <div class="col-4">Precio</div>
                                     <div class="col-auto">Acciones</div>
@@ -139,31 +143,43 @@
                                 Desmarcar el checkbox (en las clases existentes) hará que la clase aparezca deshabilitada.
                             </div>
                         </div>
+                        
                         <hr>
-                        <h5 class="mb-3">Descuentos</h5>
-                        <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center mb-3 gap-2">
+                        <h5 class="mb-3">Configuración de Descuentos</h5>
+                        
+                        <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center mb-3 gap-2 p-3 border rounded">
                             <div class="form-check d-flex align-items-center">
                                 <input class="form-check-input" type="checkbox" id="discount_enabled" name="discount_enabled" {% if settings.discount_enabled %}checked{% endif %}>
-                                <label class="form-check-label ms-2" for="discount_enabled"></label>
-                            </div>
-                            <div class="input-group">
-                                <input class="form-control" type="number" id="discount_percentage" name="discount_percentage" value="{{ settings.discount_percentage }}" min="0" max="100" placeholder="0-100">
-                                <span class="input-group-text">%</span>
+                                <label class="form-check-label ms-2 fw-bold" for="discount_enabled">Habilitar Descuento / Beneficio</label>
                             </div>
                         </div>
                         
-                        <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center mb-3 gap-2">
-                            <input class="form-control flex-fill" type="text" id="discount_description" name="discount_description" value="{{ settings.discount_description }}" placeholder="Descripción del descuento">
+                        <div class="mb-3">
+                            <label for="discount_description" class="form-label">Texto del Checkbox en Inscripción (ej: Mi residencia está a +150km)</label>
+                            <input class="form-control" type="text" id="discount_description" name="discount_description" 
+                                   value="{{ settings.discount_description }}" placeholder="Descripción del descuento que verá el usuario">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="discount_percentage" class="form-label">Porcentaje a Descontar (0-100%)</label>
+                            <div class="input-group">
+                                <input class="form-control" type="number" id="discount_percentage" name="discount_percentage" 
+                                       value="{{ settings.discount_percentage }}" min="0" max="100" placeholder="Ej: 20">
+                                <span class="input-group-text">%</span>
                             </div>
-                        
-                    </div>
+                            <div class="form-text">
+                                Este descuento se aplicará solo si el usuario marca la casilla con la descripción de arriba.
+                            </div>
+                        </div>
+                        </div>
                 </div>
 
                 <div class="text-center mt-4 d-flex justify-content-center gap-3 flex-wrap">
                     <button class="btn btn-primary" type="submit">
                         <i class="bi bi-save me-1"></i> Guardar cambios
                     </button>
-                    <a class="btn btn-secondary" href="{{ url_for('inscripciones') }}"> <i class="bi bi-house me-1"></i> Volver a inscripción
+                    <a class="btn btn-secondary" href="{{ url_for('inscripciones') }}"> 
+                        <i class="bi bi-house me-1"></i> Volver a inscripción
                     </a>
                 </div>
             </form>
@@ -174,10 +190,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             const discountEnabledCheckbox = document.getElementById('discount_enabled');
             const discountDescriptionInput = document.getElementById('discount_description');
+            const discountPercentageInput = document.getElementById('discount_percentage');
             
             function toggleDiscountFields() {
-                // Solo deshabilitamos la descripción, ya que el porcentaje es útil para ver
-                discountDescriptionInput.disabled = !discountEnabledCheckbox.checked;
+                // Deshabilitamos/Habilitamos los campos de valor y descripción si el descuento no está activo
+                const isDisabled = !discountEnabledCheckbox.checked;
+                discountDescriptionInput.disabled = isDisabled;
+                discountPercentageInput.disabled = isDisabled;
             }
 
             discountEnabledCheckbox.addEventListener('change', toggleDiscountFields);

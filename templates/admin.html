@@ -3,220 +3,279 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Configuración</title>
+    <title>Administración - Metropolitanopagos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .form-check-input:checked {
+            background-color: #007bff; /* Color azul primario */
+            border-color: #007bff;
+        }
+        .form-check-label {
+            font-weight: bold;
+        }
+        .text-primary-custom {
+            color: #007bff !important; /* Azul más vibrante para títulos */
+            font-weight: bold;
+        }
+        .btn-class-remove {
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
-    <div class="container my-4"> 
-        <div class="card admin-card shadow p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1 class="h4 mb-0">Panel de Administración</h1>
-                <form method="POST" action="{{ url_for('admin_logout') }}">
-                    <button class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-box-arrow-right"></i> Salir
-                    </button>
-                </form>
-            </div>
-            
-            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3">
-                <div class="mb-2 mb-sm-0"> 
-                    {% if settings.site_closed %}
-                        <span class="badge text-bg-warning">Inscripciones cerradas</span>
-                    {% else %}
-                        <span class="badge text-bg-success">Inscripciones abiertas</span>
-                    {% endif %}
-                </div>
-                <div class="d-flex gap-2 mt-2 mt-sm-0"> 
-                    {% if settings.site_closed %}
-                        <form method="POST" action="{{ url_for('admin_site_state') }}">
-                            <input type="hidden" name="action" value="open">
-                            <button class="btn btn-success btn-sm" type="submit">
-                                <i class="bi bi-unlock"></i> Abrir
-                            </button>
-                        </form>
-                    {% else %}
-                        <form method="POST" action="{{ url_for('admin_site_state') }}">
-                            <input type="hidden" name="action" value="close">
-                            <button class="btn btn-warning btn-sm" type="submit">
-                                <i class="bi bi-lock"></i> Cerrar
-                            </button>
-                        </form>
-                    {% endif %}
-                </div>
-            </div>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <h1 class="mb-4 text-center">Panel de Administración ⚙️</h1>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
             {% endwith %}
 
-            <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin_save') }}">
-                <div class="row g-4">
-                    <div class="col-md-6">
+            {% if not session.get('is_admin') %}
+                <div class="card p-4 shadow-sm mb-5">
+                    <h2 class="card-title">Acceso</h2>
+                    <form method="POST" action="{{ url_for('admin_login') }}">
                         <div class="mb-3">
-                            <label class="form-label">Logo actual</label>
-                            <div class="border rounded p-2 text-center">
-                                <img src="/{{ settings.logo }}" alt="Logo" class="img-fluid" style="max-height: 100px;">
-                            </div>
+                            <label for="password" class="form-label">Contraseña de Administrador</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
                         </div>
-                        <div class="mb-3">
-                            <label for="logo" class="form-label">Subir nuevo logo</label>
-                            <input class="form-control" type="file" id="logo" name="logo" accept="image/*">
-                        </div>
-                        <div class="row">
-                            <div class="col-6 mb-3">
-                                <label class="form-label">Título (izquierda)</label>
-                                <input class="form-control" type="text" name="title_main" value="{{ settings.title_main }}">
-                            </div>
-                            <div class="col-6 mb-3">
-                                <label class="form-label">Título destacado (negrita)</label>
-                                <input class="form-control" type="text" name="title_strong" value="{{ settings.title_strong }}">
-                            </div>
-                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="text-end mb-4">
+                    <form method="POST" action="{{ url_for('admin_logout') }}" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">Cerrar Sesión</button>
+                    </form>
+                </div>
 
-                        <hr>
-                        <div class="p-3 rounded" style="background-color: #f8f9fa;">
-                            <h5 class="mb-3">Links de Google Forms</h5>
-                            <div class="mb-3">
-                                <label for="google_forms_competitors_id" class="form-label">ID Google Forms Competidores</label>
-                                <input class="form-control" type="text" id="google_forms_competitors_id" name="google_forms_competitors_id" value="{{ settings.google_forms.competitors_id }}">
+                <form method="POST" action="{{ url_for('admin_save') }}" enctype="multipart/form-data">
+
+                    <div class="card border-dark mb-4 shadow-sm">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0">Estado General del Sitio</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="text-primary-custom">Control de Inscripciones</h6>
+                            <hr class="mt-1 mb-3">
+                            <p>El estado actual es: 
+                                <strong class="{% if settings.get('site_closed') %}text-danger{% else %}text-success{% endif %}">
+                                    {% if settings.get('site_closed') %}CERRADAS 🔒{% else %}ABIERTAS 🟢{% endif %}
+                                </strong>
+                            </p>
+                            <form method="POST" action="{{ url_for('admin_site_state') }}" class="d-flex justify-content-between">
+                                <button type="submit" name="action" value="open" class="btn btn-success me-2" 
+                                    {% if not settings.get('site_closed') %}disabled{% endif %}>
+                                    Abrir Inscripciones
+                                </button>
+                                <button type="submit" name="action" value="close" class="btn btn-warning" 
+                                    {% if settings.get('site_closed') %}disabled{% endif %}>
+                                    Cerrar Inscripciones
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="card border-primary mb-4 shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Ajustes de Interfaz y Apariencia</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="text-primary-custom">Títulos y Logo</h6>
+                            <hr class="mt-1 mb-3">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="title_main" class="form-label">Título Principal</label>
+                                    <input type="text" class="form-control" id="title_main" name="title_main" value="{{ settings.get('title_main', '') }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="title_strong" class="form-label">Título Fuerte (Color)</label>
+                                    <input type="text" class="form-control" id="title_strong" name="title_strong" value="{{ settings.get('title_strong', '') }}">
+                                </div>
                             </div>
                             <div class="mb-3">
-                                <label for="google_forms_trainers_id" class="form-label">ID Google Forms Entrenadores</label>
-                                <input class="form-control" type="text" id="google_forms_trainers_id" name="google_forms_trainers_id" value="{{ settings.google_forms.trainers_id }}">
+                                <label for="logo" class="form-label">Logo Actual: <img src="{{ url_for('static', filename=settings.get('logo', 'images/Metropolitano.png')) }}" alt="Logo" style="max-height: 50px;"></label>
+                                <input class="form-control" type="file" id="logo" name="logo" accept="image/*">
                             </div>
                         </div>
-                        <hr>
-                        <div class="mt-4">
-                            <h5 class="mb-3">Configuración de Pagos</h5>
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="allow_cash_payments" name="allow_cash_payments" {% if settings.allow_cash_payments %}checked{% endif %}>
-                                <label class="form-check-label" for="allow_cash_payments">Permitir pagos en efectivo (RapiPago, Pago Fácil, etc.)</label>
+                    </div>
+                    
+                    <div class="card border-info mb-4 shadow-sm">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">Información de Entorno</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="text-primary-custom">URL Base del Sitio (para Retornos de Pago)</h6>
+                            <hr class="mt-1 mb-3">
+                            <div class="mb-0">
+                                <label class="form-label">URL Base actual</label>
+                                <input type="text" class="form-control" value="{{ current_url_base }}" disabled>
+                                <div class="form-text">Este valor se lee de la variable de entorno **URL_BASE** y no es editable aquí.</div>
                             </div>
-                            <hr>
-                        </div>
-                        
-                        <h5>IDs de Google Forms para Pre-llenado (Entradas)</h5>
-                        <div class="mb-3">
-                            <label for="entry_id_num_operacion" class="form-label">ID de Entrada: Número de Operación</label>
-                            <input type="text" class="form-control" id="entry_id_num_operacion" name="entry_id_num_operacion" value="{{ settings.google_forms.get('entry_id_num_operacion', '') }}" required>
-                            <div class="form-text">Ej: entry.1161481877</div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="entry_id_clase_barco" class="form-label">ID de Entrada: Clase de Barco</label>
-                            <input type="text" class="form-control" id="entry_id_clase_barco" name="entry_id_clase_barco" value="{{ settings.google_forms.get('entry_id_clase_barco', '') }}" required>
-                            <div class="form-text">Ej: entry.1553765108</div>
                         </div>
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Clases disponibles</label>
-                        <div class="border rounded p-3">
-                            <div class="d-none d-sm-flex align-items-center mb-2"> 
-                                <div class="row g-2 w-100">
-                                    <div class="col-5">Nombre</div>
-                                    <div class="col-4">Precio</div>
-                                    <div class="col-auto">Acciones</div>
+                    <div class="card border-primary mb-4 shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Ajustes de Integración con Google Forms</h5>
+                        </div>
+                        <div class="card-body">
+                            
+                            <h6 class="text-primary-custom">IDs Únicos de Formulario (Pegar URL Completa)</h6>
+                            <hr class="mt-1 mb-3">
+                            
+                            <div class="mb-3">
+                                <label for="google_forms_competitors_id" class="form-label">Formulario Competidores</label>
+                                <input type="text" class="form-control" id="google_forms_competitors_id" name="google_forms_competitors_id" 
+                                       value="{{ settings.google_forms.get('competitors_id', '') }}">
+                                <div class="form-text">Pega la **URL completa** (viewform o edit). El código extraerá el ID automáticamente.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="google_forms_trainers_id" class="form-label">Formulario Entrenadores</label>
+                                <input type="text" class="form-control" id="google_forms_trainers_id" name="google_forms_trainers_id" 
+                                       value="{{ settings.google_forms.get('trainers_id', '') }}">
+                                <div class="form-text">Pega la **URL completa** (viewform o edit). El código extraerá el ID automáticamente.</div>
+                            </div>
+
+                            <hr class="my-4">
+                            <h6 class="text-primary-custom">IDs de Entrada (Entry IDs) para Pre-llenado</h6>
+                            <hr class="mt-1 mb-3">
+
+                            <div class="mb-3">
+                                <label for="entry_id_num_operacion" class="form-label">ID de Entrada: Número de Operación</label>
+                                <input type="text" class="form-control" id="entry_id_num_operacion" name="entry_id_num_operacion" 
+                                       value="{{ settings.google_forms.get('entry_id_num_operacion', '') }}" required>
+                                <div class="form-text">Debe ser el valor **entry.xxxx** exacto del campo de la Operación de Pago.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="entry_id_clase_barco" class="form-label">ID de Entrada: Clase de Barco</label>
+                                <input type="text" class="form-control" id="entry_id_clase_barco" name="entry_id_clase_barco" 
+                                       value="{{ settings.google_forms.get('entry_id_clase_barco', '') }}" required>
+                                <div class="form-text">Debe ser el valor **entry.xxxx** exacto del campo de la Clase de Barco.</div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    
+                    <div class="card border-primary mb-4 shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Ajustes de Pago y Descuento</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="text-primary-custom">Métodos de Pago</h6>
+                            <hr class="mt-1 mb-3">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="allow_cash_payments" name="allow_cash_payments" 
+                                    {% if settings.get('allow_cash_payments', True) %}checked{% endif %}>
+                                <label class="form-check-label" for="allow_cash_payments">Permitir pagos en efectivo (Vía Mercado Pago - Rapipago/Pagofácil)</label>
+                            </div>
+                            
+                            <hr class="my-4">
+
+                            <h6 class="text-primary-custom">Descuentos</h6>
+                            <hr class="mt-1 mb-3">
+
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="discount_enabled" name="discount_enabled" 
+                                    {% if settings.get('discount_enabled') %}checked{% endif %}>
+                                <label class="form-check-label" for="discount_enabled">Habilitar Opción de Descuento</label>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="discount_percentage" class="form-label">Porcentaje de Descuento (%)</label>
+                                    <input type="number" class="form-control" id="discount_percentage" name="discount_percentage" 
+                                           value="{{ settings.get('discount_percentage', 0) }}" min="0" max="100">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="discount_description" class="form-label">Descripción del Descuento</label>
+                                    <input type="text" class="form-control" id="discount_description" name="discount_description" 
+                                           value="{{ settings.get('discount_description', '') }}">
+                                    <div class="form-text">Ej: Socios, Pago Anticipado, etc.</div>
                                 </div>
                             </div>
-                            {% for cls in settings.classes %}
-                                <div class="class-item mb-2 d-flex align-items-center gap-2 flex-wrap">
-                                    <div class="d-flex align-items-center me-2">
-                                        <input class="form-check-input me-1" type="checkbox" id="open-{{ loop.index0 }}"
-                                                name="open-{{ loop.index0 }}" {% if not cls.closed %}checked{% endif %}>
-                                        <label class="form-check-label" for="open-{{ loop.index0 }}"></label>
-                                    </div>
-                                    <input class="form-control flex-fill" type="text" name="name-{{ loop.index0 }}"
-                                            value="{{ cls.name }}" placeholder="Nombre de la clase">
-                                    <input class="form-control" style="max-width: 100px" type="number" min="0" step="1"
-                                            name="price-{{ loop.index0 }}" value="{{ cls.price or '' }}" placeholder="Precio">
-                                    <button class="btn btn-outline-danger btn-sm" type="submit" name="delete"
-                                            value="{{ loop.index0 }}" title="Borrar clase" onclick="return confirm('¿Estás seguro de que quieres eliminar esta clase?')">
-                                        <i class="bi bi-x-lg"></i>
-                                    </button>
+                        </div>
+                    </div>
+
+                    <div class="card border-primary mb-4 shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Clases de Barco y Precios</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="text-primary-custom">Listado de Clases Actuales</h6>
+                            <hr class="mt-1 mb-3">
+                            <div class="table-responsive">
+                                <table class="table table-striped align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Clase</th>
+                                            <th>Precio ($)</th>
+                                            <th>Abierta</th>
+                                            <th>Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for class in settings.get('classes', []) %}
+                                        <tr>
+                                            <td>
+                                                <input type="text" class="form-control" name="name-{{ loop.index0 }}" value="{{ class.get('name', '') }}" required>
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control" name="price-{{ loop.index0 }}" value="{{ class.get('price', '') }}" min="1">
+                                            </td>
+                                            <td>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" id="open-{{ loop.index0 }}" name="open-{{ loop.index0 }}" 
+                                                        {% if not class.get('closed') %}checked{% endif %}>
+                                                    <label class="form-check-label" for="open-{{ loop.index0 }}"></label>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button type="submit" name="delete" value="{{ loop.index0 }}" class="btn btn-danger btn-sm btn-class-remove">Eliminar</button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <h6 class="text-primary-custom">Añadir Nueva Clase</h6>
+                            <hr class="mt-1 mb-3">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="new_class" class="form-label">Nombre de la Clase</label>
+                                    <input type="text" class="form-control" id="new_class" name="new_class">
                                 </div>
-                            {% endfor %}
-                            <hr>
-                            <div class="class-item d-flex align-items-center gap-2 flex-wrap">
-                                <label class="form-label mb-0">➕</label>
-                                <input class="form-control flex-fill" type="text" name="new_class" placeholder="Agregar nueva clase">
-                                <input class="form-control" style="max-width: 100px" type="number" min="0" step="1"
-                                        name="new_class_price" placeholder="Precio">
-                                <button type="submit" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-plus-lg me-1"></i>Agregar
-                                </button>
-                            </div>
-                            <div class="form-text mt-2">
-                                Desmarcar el checkbox (en las clases existentes) hará que la clase aparezca deshabilitada.
+                                <div class="col-md-6 mb-3">
+                                    <label for="new_class_price" class="form-label">Precio Inicial ($)</label>
+                                    <input type="number" class="form-control" id="new_class_price" name="new_class_price" min="1">
+                                </div>
                             </div>
                         </div>
-                        
-                        <hr>
-                        <h5 class="mb-3">Configuración de Descuentos</h5>
-                        
-                        <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center mb-3 gap-2 p-3 border rounded">
-                            <div class="form-check d-flex align-items-center">
-                                <input class="form-check-input" type="checkbox" id="discount_enabled" name="discount_enabled" {% if settings.discount_enabled %}checked{% endif %}>
-                                <label class="form-check-label ms-2 fw-bold" for="discount_enabled">Habilitar Descuento / Beneficio</label>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="discount_description" class="form-label">Texto del Checkbox en Inscripción (ej: Mi residencia está a +150km)</label>
-                            <input class="form-control" type="text" id="discount_description" name="discount_description" 
-                                   value="{{ settings.discount_description }}" placeholder="Descripción del descuento que verá el usuario">
-                        </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label for="discount_percentage" class="form-label">Porcentaje a Descontar (0-100%)</label>
-                            <div class="input-group">
-                                <input class="form-control" type="number" id="discount_percentage" name="discount_percentage" 
-                                       value="{{ settings.discount_percentage }}" min="0" max="100" placeholder="Ej: 20">
-                                <span class="input-group-text">%</span>
-                            </div>
-                            <div class="form-text">
-                                Este descuento se aplicará solo si el usuario marca la casilla con la descripción de arriba.
-                            </div>
-                        </div>
-                        </div>
-                </div>
+                    <div class="text-center my-5">
+                        <button type="submit" class="btn btn-success btn-lg shadow">GUARDAR TODOS LOS CAMBIOS</button>
+                    </div>
 
-                <div class="text-center mt-4 d-flex justify-content-center gap-3 flex-wrap">
-                    <button class="btn btn-primary" type="submit">
-                        <i class="bi bi-save me-1"></i> Guardar cambios
-                    </button>
-                    <a class="btn btn-secondary" href="{{ url_for('inscripciones') }}"> 
-                        <i class="bi bi-house me-1"></i> Volver a inscripción
-                    </a>
-                </div>
-            </form>
+                </form>
+            {% endif %}
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const discountEnabledCheckbox = document.getElementById('discount_enabled');
-            const discountDescriptionInput = document.getElementById('discount_description');
-            const discountPercentageInput = document.getElementById('discount_percentage');
-            
-            function toggleDiscountFields() {
-                // Deshabilitamos/Habilitamos los campos de valor y descripción si el descuento no está activo
-                const isDisabled = !discountEnabledCheckbox.checked;
-                discountDescriptionInput.disabled = isDisabled;
-                discountPercentageInput.disabled = isDisabled;
-            }
+</div>
 
-            discountEnabledCheckbox.addEventListener('change', toggleDiscountFields);
-
-            // Set initial state on page load
-            toggleDiscountFields();
-        });
-    </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

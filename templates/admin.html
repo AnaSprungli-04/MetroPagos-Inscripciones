@@ -100,6 +100,25 @@
                             </div>
                             <hr>
                         </div>
+                        <div class="mb-3">
+                            <label for="url_base" class="form-label">URL Base del Sitio (para retornos de pago)</label>
+                            <input type="url" class="form-control" id="url_base" name="url_base" value="{{ settings.get('url_base', '') }}" required>
+                            <div class="form-text">Ej: https://tudominio.com</div>
+                        </div>
+                        
+                        <hr>
+                        <h5>IDs de Google Forms para Pre-llenado (Entradas)</h5>
+                        <div class="mb-3">
+                            <label for="entry_id_num_operacion" class="form-label">ID de Entrada: Número de Operación</label>
+                            <input type="text" class="form-control" id="entry_id_num_operacion" name="entry_id_num_operacion" value="{{ settings.google_forms.get('entry_id_num_operacion', '') }}" required>
+                            <div class="form-text">Ej: entry.1161481877</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="entry_id_clase_barco" class="form-label">ID de Entrada: Clase de Barco</label>
+                            <input type="text" class="form-control" id="entry_id_clase_barco" name="entry_id_clase_barco" value="{{ settings.google_forms.get('entry_id_clase_barco', '') }}" required>
+                            <div class="form-text">Ej: entry.1553765108</div>
+                        </div>
                     </div>
 
                     <div class="col-md-6">

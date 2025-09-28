@@ -7,6 +7,7 @@ import urllib.parse
 import json
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
+import re 
 
 load_dotenv()
 app = Flask(__name__)
@@ -18,6 +19,30 @@ app.logger.setLevel(logging.INFO)
 SETTINGS_PATH = os.path.join(os.path.dirname(__file__), 'settings.json')
 ALLOWED_LOGO_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
+# 💥 CAMBIO CLAVE: URL_BASE se lee del entorno con un fallback (valor por defecto)
+URL_BASE = os.environ.get("URL_BASE", "https://metropolitanopagos-inscripciones.onrender.com") 
+
+# --- Función Auxiliar para Extracción de ID ---
+def extract_form_id(url_or_id):
+    """
+    Extrae el ID único del formulario (la cadena entre /d/e/ y /viewform o /edit).
+    Si se proporciona un ID limpio, lo devuelve.
+    """
+    # 1. Patrón para buscar IDs largos de Google Forms (después de /d/e/)
+    match = re.search(r'/d/e/([a-zA-Z0-9_-]+)(?:/viewform|/edit|/formResponse)?', url_or_id)
+    if match:
+        return match.group(1)
+    
+    # 2. Patrón para IDs más cortos (raros, pero para cubrir)
+    match = re.search(r'/d/([a-zA-Z0-9_-]+)(?:/viewform|/edit|/formResponse)?', url_or_id)
+    if match:
+        return match.group(1)
+
+    # 3. Si no es una URL, asumimos que ya es el ID limpio
+    return url_or_id.strip()
+
+# ---------------------------------------------
+
 def load_settings():
     try:
         with open(SETTINGS_PATH, 'r', encoding='utf-8') as f:
@@ -26,8 +51,14 @@ def load_settings():
             if "google_forms" not in settings:
                 settings["google_forms"] = {
                     "competitors_id": "1FAIpQLSeA0tbwyKZ-u8zra-W6hlJL8TCTQOayqCpKwya3sON0ubS0nA",
-                    "trainers_id": "1FAIpQLSeZGar2xA3OR6SwNbKatSj1CLWQjRTmWyM0t-LOabpRWZYZ4g"
+                    "trainers_id": "1FAIpQLSeZGar2xA3OR6SwNbKatSj1CLWQjRTmWyM0t-LOabpRWZYZ4g",
+                    "entry_id_num_operacion": "entry.1161481877",
+                    "entry_id_clase_barco": "entry.1553765108"
                 }
+            # 💥 ELIMINADO: Ya no se maneja "url_base" en settings
+            if "url_base" in settings:
+                del settings["url_base"] # Limpieza si existía en un JSON viejo
+
             if "allow_cash_payments" not in settings:
                 settings["allow_cash_payments"] = True
             if "discount_enabled" not in settings:
@@ -36,6 +67,7 @@ def load_settings():
                 settings["discount_description"] = ""
             if "discount_percentage" not in settings:
                 settings["discount_percentage"] = 0
+            
             # Asegurar que cada clase tenga un precio de descuento (aunque ahora se calcula)
             for cls in settings.get("classes", []):
                 if "discount_price" not in cls:
@@ -52,8 +84,11 @@ def load_settings():
             "classes": [],
             "google_forms": {
                 "competitors_id": "1FAIpQLSeA0tbwyKZ-u8zra-W6hlJL8TCTQOayqCpKwya3sON0ubS0nA",
-                "trainers_id": "1FAIpQLSeZGar2xA3OR6SwNbKatSj1CLWQjRTmWyM0t-LOabpRWZYZ4g"
+                "trainers_id": "1FAIpQLSeZGar2xA3OR6SwNbKatSj1CLWQjRTmWyM0t-LOabpRWZYZ4g",
+                "entry_id_num_operacion": "entry.1161481877",
+                "entry_id_clase_barco": "entry.1553765108"
             },
+            # 💥 ELIMINADO: Ya no se maneja "url_base" en settings
             "allow_cash_payments": True,
             "discount_enabled": False,
             "discount_percentage": 0,
@@ -72,9 +107,6 @@ sdk = mercadopago.SDK(MERCADO_PAGO_ACCESS_TOKEN)
 
 app.logger.info(f"DEBBUGING: {MERCADO_PAGO_ACCESS_TOKEN[:10]}")
 
-GOOGLE_FORMS_ENTRY_ID_NUM_OPERACION = "entry.1161481877"
-GOOGLE_FORMS_ENTRY_ID_CLASE_BARCO = "entry.1553765108"
-URL_BASE = "https://metropolitanopagos-inscripciones.onrender.com" # Asume que esta es tu URL base
 
 @app.route('/')
 def index():
@@ -88,12 +120,13 @@ def index():
 def process_inscription():
     rol = request.form.get('rol')
     settings = load_settings()
+    # 💥 MODIFICADO: Ahora usa la constante global URL_BASE
+    
     if settings.get("site_closed"):
         return render_template('cerrada.html', page_title="Inscripción cerrada"), 403
     
     clase_barco = request.form.get('clase_barco')
     
-    # 💥 CORRECCIÓN CLAVE: Lee el campo 'apply_discount' de index.html 
     apply_discount = request.form.get('apply_discount') == 'on'
 
     if rol == 'entrenador':
@@ -125,23 +158,17 @@ def process_inscription():
                 app.logger.error("Competidor sin clase de barco o clase de barco inválida.")
                 return "Error: Por favor, selecciona tu clase de barco.", 400
             
-            # Lógica del descuento **ACTUALIZADA**
-            # Aplica descuento si: 1) Está habilitado en Admin, 2) El usuario lo marcó y 3) Hay un precio normal.
             is_discounted = settings.get("discount_enabled") and apply_discount and class_info.get("price") is not None
             
             if is_discounted:
-                # Calculamos el precio con descuento. Usamos el precio normal - el porcentaje.
                 original_price = int(class_info["price"])
                 discount_percentage = int(settings.get("discount_percentage", 0))
                 
-                # Cálculo: Precio * (1 - Porcentaje / 100)
                 total_price = original_price * (1 - discount_percentage / 100)
-                total_price = max(1, round(total_price, 2)) # Asegurar que el precio es al menos 1
+                total_price = max(1, round(total_price, 2)) 
                 
-                # Se actualiza el título del ítem de Mercado Pago para reflejar el descuento
                 item_title += f" - {clase_barco} ({settings.get('discount_description', 'Descuento aplicado')})"
             else:
-                # Si no aplica descuento, usa el precio normal
                 total_price = int(class_info["price"])
                 item_title += f" - {clase_barco}"
                 
@@ -169,12 +196,13 @@ def process_inscription():
                 }
             ],
             "back_urls": {
+                # 💥 USO de la constante global URL_BASE
                 "success": f"{URL_BASE}/payment_success?clase_barco={encoded_clase_barco}",
                 "pending": f"{URL_BASE}/payment_pending?clase_barco={encoded_clase_barco}",
                 "failure": f"{URL_BASE}/payment_failure?clase_barco={encoded_clase_barco}"
             },
             "auto_return": "approved",
-            "external_reference": f"CPNLB_{clase_barco or 'no_barco'}",
+            "external_reference": f"METRO_{clase_barco or 'no_barco'}",
             "payment_methods": {
                 "excluded_payment_types": excluded_payment_types
             }
@@ -204,17 +232,19 @@ def payment_success():
     clase_barco = request.args.get('clase_barco')
     settings = load_settings()
     google_forms_id = settings["google_forms"]["competitors_id"]
+    entry_id_num_operacion = settings["google_forms"]["entry_id_num_operacion"]
+    entry_id_clase_barco = settings["google_forms"]["entry_id_clase_barco"]
 
     app.logger.info(f"Redirección de éxito de MP recibida. Payment ID: {payment_id}, Status: {status}, Collection ID: {collection_id}, Clase Barco: {clase_barco}")
 
     google_forms_url_competidor = (
         f"https://docs.google.com/forms/d/e/{google_forms_id}/viewform?"
-        f"usp=pp_url&{GOOGLE_FORMS_ENTRY_ID_NUM_OPERACION}={payment_id}"
+        f"usp=pp_url&{entry_id_num_operacion}={payment_id}"
     )
 
     if clase_barco:
         encoded_clase_barco_for_form = urllib.parse.quote_plus(clase_barco)
-        google_forms_url_competidor += f"&{GOOGLE_FORMS_ENTRY_ID_CLASE_BARCO}={encoded_clase_barco_for_form}"
+        google_forms_url_competidor += f"&{entry_id_clase_barco}={encoded_clase_barco_for_form}"
 
     return render_template('success.html',
                            message="¡Tu pago fue procesado con Exito! Por favor, verifica tu correo o continua con los pasos adicionales.",
@@ -287,8 +317,6 @@ def inscripciones():
     
     classes = settings.get("classes", [])
     
-    # Ordenar las clases antes de enviarlas a la plantilla 
-    # Las clases NO CERRADAS (closed=False) irán PRIMERO.
     sorted_classes = sorted(classes, key=lambda cls: cls.get("closed", False))
     
     enabled_classes = [c["name"] for c in sorted_classes if not c.get("closed", False)]
@@ -302,7 +330,7 @@ def inscripciones():
         logo_path=logo_path,
         title_main=title_main,
         title_strong=title_strong,
-        classes=sorted_classes,  # Usar la lista ordenada
+        classes=sorted_classes, 
         enabled_classes=enabled_classes,
         discount_enabled=discount_enabled,
         discount_description=discount_description
@@ -315,7 +343,8 @@ def admin_home():
     if not session.get('is_admin'):
         return render_template('admin_login.html')
     settings = load_settings()
-    return render_template('admin.html', settings=settings)
+    # 💥 MODIFICADO: URL_BASE ya no está en settings, se pasa como variable separada (si es necesario)
+    return render_template('admin.html', settings=settings, current_url_base=URL_BASE)
 
 @app.route('/admin/login', methods=['POST'])
 def admin_login():
@@ -356,16 +385,24 @@ def admin_save():
     settings['title_main'] = request.form.get('title_main', settings.get('title_main', 'Inscripciones')).strip()
     settings['title_strong'] = request.form.get('title_strong', settings.get('title_strong', 'Metropolitano')).strip()
 
-    settings["google_forms"]["competitors_id"] = request.form.get('google_forms_competitors_id', settings["google_forms"]["competitors_id"]).strip()
-    settings["google_forms"]["trainers_id"] = request.form.get('google_forms_trainers_id', settings["google_forms"]["trainers_id"]).strip()
+    # Extracción de IDs de Google Forms
+    competitors_url_or_id = request.form.get('google_forms_competitors_id', settings["google_forms"]["competitors_id"]).strip()
+    settings["google_forms"]["competitors_id"] = extract_form_id(competitors_url_or_id)
+    
+    trainers_url_or_id = request.form.get('google_forms_trainers_id', settings["google_forms"]["trainers_id"]).strip()
+    settings["google_forms"]["trainers_id"] = extract_form_id(trainers_url_or_id)
+    
+    # IDs de Entrada del formulario
+    settings["google_forms"]["entry_id_num_operacion"] = request.form.get('entry_id_num_operacion', settings["google_forms"]["entry_id_num_operacion"]).strip()
+    settings["google_forms"]["entry_id_clase_barco"] = request.form.get('entry_id_clase_barco', settings["google_forms"]["entry_id_clase_barco"]).strip()
+    
+    # 💥 ELIMINADO: Ya no se guarda "url_base" aquí. Se maneja vía environment.
 
     settings["allow_cash_payments"] = request.form.get('allow_cash_payments') == 'on'
     
-    # Guardar configuración de descuento desde el admin.html
     settings["discount_enabled"] = request.form.get('discount_enabled') == 'on'
     settings["discount_description"] = request.form.get('discount_description', '').strip()
     
-    # Guardar el porcentaje de descuento
     try:
         settings["discount_percentage"] = int(request.form.get('discount_percentage', 0))
     except ValueError:
@@ -381,8 +418,6 @@ def admin_save():
         
         try:
             price = int(price_val) if price_val else cls.get('price')
-            
-            # price_discount ya no se guarda, se calcula dinámicamente en process_inscription
             discount_price = None 
             
         except Exception:
@@ -396,12 +431,11 @@ def admin_save():
     if new_class:
         names_lower = {c['name'].lower() for c in updated_classes}
         if new_class.lower() not in names_lower:
-            # La nueva clase siempre estará abierta por defecto al agregar
             new_closed = False 
             new_price_val = request.form.get('new_class_price')
             try:
                 new_price = int(new_price_val) if new_price_val else None
-                new_discount_price = None # Se calcula dinámicamente
+                new_discount_price = None 
             except Exception:
                 new_price = None
                 new_discount_price = None
@@ -443,5 +477,4 @@ def admin_site_state():
     return redirect(url_for('admin_home'))
 
 if __name__ == '__main__':
-    # Usar debug=True solo para desarrollo local
     app.run(debug=False, port=5000)

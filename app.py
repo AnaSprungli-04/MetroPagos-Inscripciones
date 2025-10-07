@@ -5,6 +5,7 @@ import os
 import logging
 import urllib.parse
 import json
+import tempfile
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 import re 
@@ -16,7 +17,58 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
 
 app.logger.setLevel(logging.INFO)
 
-SETTINGS_PATH = os.path.join(os.path.dirname(__file__), 'settings.json')
+# --- arriba de app.py, donde hoy definís SETTINGS_PATH ---
+BASE_DIR = os.path.dirname(__file__)
+# Directorio de datos escribible: en Render es /data si configurás un disk.
+DATA_DIR = os.environ.get("DATA_DIR", "/data")
+
+# Si /data no existe o no es escribible (p.ej. local), caemos a BASE_DIR
+try:
+    os.makedirs(DATA_DIR, exist_ok=True)
+    test_path = os.path.join(DATA_DIR, ".writetest")
+    with open(test_path, "w", encoding="utf-8") as _f:
+        _f.write("ok")
+    os.remove(test_path)
+    SETTINGS_DIR = DATA_DIR
+except Exception:
+    SETTINGS_DIR = BASE_DIR  # fallback local
+
+SETTINGS_PATH = os.path.join(SETTINGS_DIR, "settings.json")
+REPO_SETTINGS_PATH = os.path.join(BASE_DIR, "settings.json")
+
+def _bootstrap_settings_file():
+    """
+    Si no existe settings.json en el directorio de datos, copiamos el del repo.
+    """
+    if not os.path.exists(SETTINGS_PATH):
+        src = REPO_SETTINGS_PATH if os.path.exists(REPO_SETTINGS_PATH) else None
+        default = {
+            "logo": "static/images/Metropolitano.png",
+            "title_main": "Inscripciones",
+            "title_strong": "Metropolitano",
+            "base_price": 0,
+            "site_closed": False,
+            "classes": [],
+            "google_forms": {
+                "competitors_id": "",
+                "trainers_id": "",
+                "entry_id_num_operacion": "entry.1161481877",
+                "entry_id_clase_barco": "entry.1553765108"
+            },
+            "allow_cash_payments": True,
+            "discount_enabled": False,
+            "discount_percentage": 0,
+            "discount_description": ""
+        }
+        if src:
+            import shutil
+            shutil.copyfile(src, SETTINGS_PATH)
+        else:
+            with open(SETTINGS_PATH, "w", encoding="utf-8") as f:
+                json.dump(default, f, ensure_ascii=False, indent=2)
+
+_bootstrap_settings_file()
+
 ALLOWED_LOGO_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
 # 💥 CAMBIO CLAVE: URL_BASE se lee del entorno con un fallback (valor por defecto)
@@ -95,9 +147,32 @@ def load_settings():
             "discount_description": ""
         }
 
+# app.py (reemplazá tu save_settings existente)
 def save_settings(data):
-    with open(SETTINGS_PATH, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    """
+    Guarda settings.json de forma atómica:
+    escribe a un archivo temporal en el mismo directorio y lo
+    reemplaza por os.replace(), que es atómico en POSIX/Windows.
+    """
+    dir_ = os.path.dirname(SETTINGS_PATH)
+    os.makedirs(dir_, exist_ok=True)
+
+    # crear archivo temporal en el MISMO directorio (muy importante)
+    fd, tmp_path = tempfile.mkstemp(prefix="settings.", suffix=".json", dir=dir_)
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+            f.flush()
+            os.fsync(f.fileno())  # asegura que llegue a disco antes del replace
+        os.replace(tmp_path, SETTINGS_PATH)  # swap atómico
+    finally:
+        # limpieza por si algo falló antes del replace
+        try:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+        except Exception:
+            pass
+
 
 def allowed_logo(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_LOGO_EXTENSIONS

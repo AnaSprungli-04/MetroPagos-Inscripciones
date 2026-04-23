@@ -59,6 +59,7 @@ def make_default_campeonato(name="Metropolitano", camp_id=None):
         "discount_enabled": False,
         "discount_percentage": 0,
         "discount_description": "",
+        "camp_prefix": "",
         "classes": []
     }
 
@@ -78,6 +79,7 @@ def _migrate_old_settings(old):
     camp["discount_enabled"] = old.get("discount_enabled", False)
     camp["discount_percentage"] = old.get("discount_percentage", 0)
     camp["discount_description"] = old.get("discount_description", "")
+    camp["camp_prefix"] = old.get("camp_prefix", "")
     camp["classes"] = old.get("classes", [])
     new["campeonatos"] = [camp]
     return new
@@ -125,6 +127,7 @@ def load_settings():
             camp.setdefault("discount_enabled", False)
             camp.setdefault("discount_percentage", 0)
             camp.setdefault("discount_description", "")
+            camp.setdefault("camp_prefix", "")
             camp.setdefault("classes", [])
             for cls in camp["classes"]:
                 cls.setdefault("discount_price", None)
@@ -159,7 +162,7 @@ app.logger.info(f"DEBBUGING: {MERCADO_PAGO_ACCESS_TOKEN[:10]}")
 def get_camp_or_none(settings, camp_id):
     return next((c for c in settings.get("campeonatos", []) if c["id"] == camp_id), None)
 
-# ── Rutas publicas ──────────────────────────────────────────────────────────
+# ââ Rutas publicas ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 @app.route('/')
 def index():
@@ -232,14 +235,16 @@ def process_inscription():
         if class_info is None:
             return "Error: clase no valida.", 400
         is_discounted = (camp.get("discount_enabled") and apply_discount and class_info.get("price") is not None)
+        camp_prefix = camp.get("camp_prefix", "").strip()
+        clase_label = f"{camp_prefix}_{clase_barco}" if camp_prefix else clase_barco
         if is_discounted:
             original_price = int(class_info["price"])
             discount_pct = int(camp.get("discount_percentage", 0))
             total_price = max(1, round(original_price * (1 - discount_pct / 100), 2))
-            item_title = f"Inscripcion Competidor - {clase_barco} ({camp.get('discount_description', 'Descuento')})"
+            item_title = f"Inscripcion Competidor - {clase_label} ({camp.get('discount_description', 'Descuento')})"
         else:
             total_price = max(1, int(class_info["price"]))
-            item_title = f"Inscripcion Competidor - {clase_barco}"
+            item_title = f"Inscripcion Competidor - {clase_label}"
         encoded_clase_barco = urllib.parse.quote_plus(clase_barco)
         encoded_camp_id = urllib.parse.quote_plus(camp_id)
         excluded_payment_types = []
@@ -253,7 +258,7 @@ def process_inscription():
                 "failure": f"{URL_BASE}/payment_failure?clase_barco={encoded_clase_barco}&camp_id={encoded_camp_id}",
             },
             "auto_return": "approved",
-            "external_reference": f"METRO_{clase_barco}_{camp_id}",
+            "external_reference": f"METRO_{clase_label}_{camp_id}",
             "payment_methods": {"excluded_payment_types": excluded_payment_types}
         }
         try:
@@ -331,7 +336,7 @@ def site_closed_gate():
     except Exception:
         pass
 
-# ── Admin ──────────────────────────────────────────────────────────────────
+# ââ Admin ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 @app.route('/admin', methods=['GET'])
 def admin_home():
@@ -387,7 +392,7 @@ def admin_save_cuba_logo():
             flash('Formato de imagen no permitido', 'warning')
     return redirect(url_for('admin_home'))
 
-# ── Admin - Campeonatos CRUD ────────────────────────────────────────────────
+# ââ Admin - Campeonatos CRUD ââââââââââââââââââââââââââââââââââââââââââââââââ
 
 @app.route('/admin/campeonato/new', methods=['POST'])
 def admin_new_campeonato():
@@ -450,6 +455,7 @@ def admin_save_campeonato(camp_id):
     gf['trainers_id'] = extract_form_id(request.form.get('google_forms_trainers_id', gf.get('trainers_id', '')).strip())
     gf['entry_id_num_operacion'] = request.form.get('entry_id_num_operacion', gf.get('entry_id_num_operacion', 'entry.1161481877')).strip()
     gf['entry_id_clase_barco'] = request.form.get('entry_id_clase_barco', gf.get('entry_id_clase_barco', 'entry.1553765108')).strip()
+    camp['camp_prefix'] = request.form.get('camp_prefix', camp.get('camp_prefix', ''))[:10].strip()
     updated_classes = []
     for idx, cls in enumerate(camp.get('classes', [])):
         open_checked = request.form.get(f'open-{idx}') == 'on'

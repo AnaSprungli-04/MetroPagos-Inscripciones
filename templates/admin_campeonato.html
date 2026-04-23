@@ -48,6 +48,13 @@
             <input class="form-control" type="text" name="name" value="{{ camp.name }}" required>
           </div>
 
+          <div class="mb-3">
+            <label class="form-label fw-bold">Prefijo para MercadoPago</label>
+            <input class="form-control" type="text" name="camp_prefix" value="{{ camp.camp_prefix or '' }}"
+                   maxlength="10" placeholder="Ej: Metro-2026 (max 10 caracteres)">
+            <div class="form-text">Se antepone a la clase al enviar el pago. Ej: <code>Metro-2026_Optimist</code></div>
+          </div>
+
           <div class="row">
             <div class="col-6 mb-3">
               <label class="form-label">Titulo (normal)</label>

@@ -178,17 +178,20 @@ def serve_logo(filename):
 def index():
     settings = load_settings()
     if settings.get("site_closed"):
-        return render_template('cerrada.html', page_title="Inscripcion cerrada")
+        return render_template('cerrada.html', page_title="Inscripcion cerrada",
+                               cuba_logo=settings.get("cuba_logo", "static/images/Metropolitano.png"))
     return redirect(url_for('inscripciones'))
 
 @app.route('/inscripciones')
 def inscripciones():
     settings = load_settings()
     if settings.get("site_closed"):
-        return render_template('cerrada.html', page_title="Inscripcion cerrada")
+        return render_template('cerrada.html', page_title="Inscripcion cerrada",
+                               cuba_logo=settings.get("cuba_logo", "static/images/Metropolitano.png"))
     activos = [c for c in settings.get("campeonatos", []) if c.get("active", True)]
     if not activos:
-        return render_template('cerrada.html', page_title="No hay campeonatos activos")
+        return render_template('cerrada.html', page_title="No hay campeonatos activos",
+                               cuba_logo=settings.get("cuba_logo", "static/images/Metropolitano.png"))
     if len(activos) == 1:
         return redirect(url_for('inscripcion_campeonato', camp_id=activos[0]['id']))
     return render_template('select_campeonato.html',
@@ -199,7 +202,8 @@ def inscripciones():
 def inscripcion_campeonato(camp_id):
     settings = load_settings()
     if settings.get("site_closed"):
-        return render_template('cerrada.html', page_title="Inscripcion cerrada")
+        return render_template('cerrada.html', page_title="Inscripcion cerrada",
+                               cuba_logo=settings.get("cuba_logo", "static/images/Metropolitano.png"))
     camp = get_camp_or_none(settings, camp_id)
     if not camp or not camp.get("active", True):
         return redirect(url_for('inscripciones'))
@@ -225,7 +229,8 @@ def process_inscription():
     camp_id = request.form.get('camp_id')
     settings = load_settings()
     if settings.get("site_closed"):
-        return render_template('cerrada.html', page_title="Inscripcion cerrada"), 403
+        return render_template('cerrada.html', page_title="Inscripcion cerrada",
+                               cuba_logo=settings.get("cuba_logo", "static/images/Metropolitano.png")), 403
     camp = get_camp_or_none(settings, camp_id)
     if not camp or not camp.get("active", True):
         return "Campeonato no disponible.", 404
@@ -342,7 +347,8 @@ def site_closed_gate():
             return
         settings = load_settings()
         if settings.get('site_closed'):
-            return render_template('cerrada.html', page_title="Inscripcion cerrada")
+            return render_template('cerrada.html', page_title="Inscripcion cerrada",
+                               cuba_logo=settings.get("cuba_logo", "static/images/Metropolitano.png"))
     except Exception:
         pass
 
@@ -395,7 +401,7 @@ def admin_save_cuba_logo():
             file.save(os.path.join(LOGOS_DIR, save_name))
             settings['cuba_logo'] = f"logos/{save_name}"
             save_settings(settings)
-            flash('Logo de CUBA actualizado', 'success')
+            flash('Logo del club actualizado', 'success')
         else:
             flash('Formato de imagen no permitido', 'warning')
     return redirect(url_for('admin_home'))

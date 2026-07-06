@@ -52,11 +52,11 @@
       </div>
     </div>
 
-    <!-- Logo principal CUBA -->
+    <!-- Logo principal del club -->
     <div class="mb-4 p-3 rounded border">
-      <h5 class="mb-3"><i class="bi bi-image me-1"></i>Logo principal de CUBA</h5>
+      <h5 class="mb-3"><i class="bi bi-image me-1"></i>Logo principal del club</h5>
       <div class="d-flex align-items-center gap-4 flex-wrap">
-        <img src="/{{ settings.cuba_logo }}" alt="Logo CUBA" style="height: 70px; object-fit: contain;">
+        <img src="/{{ settings.cuba_logo }}" alt="Logo del club" style="height: 70px; object-fit: contain;">
         <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin_save_cuba_logo') }}">
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <input class="form-control form-control-sm" type="file" name="cuba_logo" accept="image/*">
@@ -138,7 +138,7 @@
       <form method="POST" action="{{ url_for('admin_new_campeonato') }}" class="d-flex gap-2 align-items-end flex-wrap">
         <div class="flex-fill">
           <label class="form-label mb-1">Nombre del campeonato</label>
-          <input class="form-control" type="text" name="name" placeholder="Ej: Metropolitano 2026" required>
+          <input class="form-control" type="text" name="name" placeholder="Nombre del campeonato" required>
         </div>
         <button class="btn btn-primary" type="submit"><i class="bi bi-plus-lg me-1"></i>Crear</button>
       </form>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Panel</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+<div class="container my-4">
+  <div class="card admin-card shadow p-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h4 mb-0">Panel de Administracion</h1>
+      <form method="POST" action="{{ url_for('admin_logout') }}">
+        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-box-arrow-right"></i> Salir</button>
+      </form>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Estado global del sitio -->
+    <div class="d-flex align-items-center justify-content-between mb-4 p-3 rounded border">
+      <div>
+        {% if settings.site_closed %}
+          <span class="badge text-bg-warning fs-6"><i class="bi bi-lock-fill me-1"></i>Inscripciones cerradas</span>
+        {% else %}
+          <span class="badge text-bg-success fs-6"><i class="bi bi-unlock-fill me-1"></i>Inscripciones abiertas</span>
+        {% endif %}
+        <div class="form-text mt-1">Esto afecta a todos los campeonatos.</div>
+      </div>
+      <div>
+        {% if settings.site_closed %}
+          <form method="POST" action="{{ url_for('admin_site_state') }}">
+            <input type="hidden" name="action" value="open">
+            <button class="btn btn-success btn-sm"><i class="bi bi-unlock"></i> Abrir todo</button>
+          </form>
+        {% else %}
+          <form method="POST" action="{{ url_for('admin_site_state') }}">
+            <input type="hidden" name="action" value="close">
+            <button class="btn btn-warning btn-sm"><i class="bi bi-lock"></i> Cerrar todo</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Logo principal CUBA -->
+    <div class="mb-4 p-3 rounded border">
+      <h5 class="mb-3"><i class="bi bi-image me-1"></i>Logo principal de CUBA</h5>
+      <div class="d-flex align-items-center gap-4 flex-wrap">
+        <img src="/{{ settings.cuba_logo }}" alt="Logo CUBA" style="height: 70px; object-fit: contain;">
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin_save_cuba_logo') }}">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <input class="form-control form-control-sm" type="file" name="cuba_logo" accept="image/*">
+            <button class="btn btn-outline-primary btn-sm" type="submit"><i class="bi bi-upload"></i> Actualizar</button>
+          </div>
+          <div class="form-text">Se muestra cuando hay varios campeonatos activos.</div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tabla de campeonatos -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0"><i class="bi bi-trophy me-1"></i>Campeonatos</h4>
+    </div>
+
+    <div class="table-responsive mb-4">
+      <table class="table table-bordered align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Campeonato</th>
+            <th class="text-center">Estado</th>
+            <th class="text-center">Clases</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if settings.campeonatos %}
+            {% for camp in settings.campeonatos %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-3">
+                  <img src="/{{ camp.logo }}" alt="" style="height: 40px; width: 40px; object-fit: contain;">
+                  <div>
+                    <strong>{{ camp.name }}</strong>
+                    <div class="form-text mb-0">{{ camp.title_main }} {{ camp.title_strong }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="text-center">
+                <form method="POST" action="{{ url_for('admin_toggle_campeonato', camp_id=camp.id) }}">
+                  <button class="btn btn-sm {% if camp.active %}btn-success{% else %}btn-outline-secondary{% endif %}" type="submit">
+                    {% if camp.active %}
+                      <i class="bi bi-toggle-on"></i> Activo
+                    {% else %}
+                      <i class="bi bi-toggle-off"></i> Inactivo
+                    {% endif %}
+                  </button>
+                </form>
+              </td>
+              <td class="text-center">{{ camp.classes | length }}</td>
+              <td class="text-center">
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                  <a href="{{ url_for('admin_edit_campeonato', camp_id=camp.id) }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-pencil"></i> Editar
+                  </a>
+                  <a href="{{ url_for('inscripcion_campeonato', camp_id=camp.id) }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-eye"></i> Ver
+                  </a>
+                  <form method="POST" action="{{ url_for('admin_delete_campeonato', camp_id=camp.id) }}"
+                        onsubmit="return confirm('Eliminar este campeonato? Esta accion no se puede deshacer.')">
+                    <button class="btn btn-outline-danger btn-sm" type="submit"><i class="bi bi-trash"></i></button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="4" class="text-center text-muted py-3">No hay campeonatos. Crea uno abajo.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Nuevo campeonato -->
+    <div class="p-3 rounded border">
+      <h5 class="mb-3"><i class="bi bi-plus-circle me-1"></i>Crear nuevo campeonato</h5>
+      <form method="POST" action="{{ url_for('admin_new_campeonato') }}" class="d-flex gap-2 align-items-end flex-wrap">
+        <div class="flex-fill">
+          <label class="form-label mb-1">Nombre del campeonato</label>
+          <input class="form-control" type="text" name="name" placeholder="Ej: Metropolitano 2026" required>
+        </div>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-plus-lg me-1"></i>Crear</button>
+      </form>
+    </div>
+
+    <div class="text-center mt-4">
+      <a class="btn btn-secondary" href="{{ url_for('inscripciones') }}">
+        <i class="bi bi-house me-1"></i> Volver a inscripcion
+      </a>
+    </div>
+
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

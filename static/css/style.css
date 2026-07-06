@@ -1,0 +1,113 @@
+body {
+    background-color: #f8f9fa; 
+    min-height: 90vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+    font-family: arial, 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif; 
+}
+
+.disabled-option {
+    color: grey;
+}
+
+/* Estilos para el contenedor principal */
+.container {
+    max-width: 90vw; 
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Estilos para las tarjetas (card) */
+.card {
+    border-radius: 15px; /* Bordes redondeados para las tarjetas */
+    border: none; /* Sin borde por defecto */
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); /* Sombra más pronunciada */
+}
+
+/* Estilos para los títulos dentro de las tarjetas */
+.card-title {
+    color: #0261b4; /* Color primario para títulos (Bootstrap blue) */
+}
+
+header {
+    min-height: 30vh;
+    display: flex; /* Esto está bien para el contenido dentro del header */
+    align-items: center;
+    position: relative;}
+
+/* Estilos específicos para el título principal en success.html */
+h1, label {
+    color: #0261b4; /* Color azul específico para h1 */
+}
+
+/* Estilos para el spinner de carga */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+    margin-top: 1.5rem;
+    color: #0065bd; /* Color primario de Bootstrap */
+    /* Asegura que el spinner sea visible y tenga un tamaño mínimo */
+    display: inline-block;
+    vertical-align: -0.125em;
+    border: 0.25em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: .75s linear infinite spinner-border;
+
+}
+@keyframes spinner-border {
+    to { transform: rotate(360deg); }
+}
+
+/* Estilo para el mensaje de redirección automática */
+.redirect-message {
+    font-size: 1.3em; 
+    font-weight: bold; 
+    color: 0065bd; 
+}
+
+.btn-redirect {
+    margin-top: 20px; 
+    padding: 12px 30px; 
+    font-size: 1.1em; }
+
+.embed-responsive {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+}
+
+.embed-responsive-16by9::before {
+    content: "";
+    display: block;
+    padding-top: 56.25%; /* Relación de aspecto 16:9 */
+}
+
+.embed-responsive .embed-responsive-item {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0; /* Sin borde para el iframe */
+}
+
+/* Opcional: Centrar el botón de pagar */
+.form-center {
+    display: flex;
+    justify-content: center;
+}
+
+
+.admin-card { max-width: 1000px; margin: 0 auto; }
+.class-item { 
+    gap: .5rem; /* Mantiene el espaciado entre elementos */
+}
+/* Asegura que los campos de texto no tengan un ancho fijo que rompa el layout */
+.class-item .form-control {
+    width: auto; /* Permite que Bootstrap maneje el ancho */
+}

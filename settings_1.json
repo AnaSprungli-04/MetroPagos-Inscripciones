@@ -1,0 +1,12 @@
+{
+  "logo": "static/images/Metropolitano.png",
+  "title_main": "Inscripciones",
+  "title_strong": "Campeonato Argentino de Optimist",
+  "base_price": 0,
+  "site_closed": false,
+  "classes": [
+    {"name": "Optimist Principiantes", "closed": true, "price": 70000},
+    {"name": "Optimist Timoneles", "closed": true, "price": 70000},
+    {"name": "Extranjeros - Optimist Timoneles", "closed": true, "price": 40000},
+  ]
+}

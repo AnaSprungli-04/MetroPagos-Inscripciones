@@ -1,0 +1,16 @@
+# Archivo de variables de entorno local
+.env
+
+# Entorno virtual de Python
+venv/
+
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Directorios de IDE (ej. VS Code)
+.vscode/
+
+# Archivos de despliegue específicos de Render (si se generan)
+.render/
